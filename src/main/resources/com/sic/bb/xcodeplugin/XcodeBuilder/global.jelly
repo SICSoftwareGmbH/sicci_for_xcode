@@ -1,0 +1,19 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+	<f:section title="Xcode Builder">  
+    	<f:entry title="${%xcodebuild}" field="xcodebuild" help="/plugin/XcodeBuilder/help-xcodebuild.html">
+    		<f:textbox name="xcodebuild.xcodebuild" value="${descriptor.getXcodebuild()}" />
+    	</f:entry>
+    	<f:entry title="${%use Xcode for cleanup}" help="/plugin/XcodeBuilder/help-xcodeclean.html">
+    		<f:checkbox name="xcodebuild.xcodeClean" checked="${descriptor.getXcodeClean()}" />
+    	</f:entry>
+    	<f:entry title="${%clean before build}" help="/plugin/XcodeBuilder/help-cleanbeforebuild.html">
+    		<f:checkbox name="xcodebuild.cleanBeforeBuild" checked="${descriptor.getCleanBeforeBuild()}" />
+    	</f:entry>
+    	<f:entry title="${%create IPA}" help="/plugin/XcodeBuilder/help-createipa.html">
+    		<f:checkbox name="xcodebuild.createIPA" checked="${descriptor.getCreateIPA()}" />
+    	</f:entry>
+    	<f:entry title="${%use Hudson versioning}" help="/plugin/XcodeBuilder/help-usehudsonversioning.html">
+    		<f:checkbox name="xcodebuild.useHudsonVersioning" checked="${descriptor.getUseHudsonVersioning()}" />
+    	</f:entry>
+	</f:section>
+</j:jelly>

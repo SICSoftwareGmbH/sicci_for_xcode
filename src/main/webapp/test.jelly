@@ -1,0 +1,16 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:s="/lib/form">
+
+	<div id="haha">
+		${rootURL}
+	</div>
+	<!--
+	${h}
+	${it}
+	<j:set var="instance" value="hallo">
+	${instance}
+	${builder}
+	${p.toString()}
+	-->
+
+</j:jelly>
