@@ -306,6 +306,18 @@ public class XcodeBuilder extends Builder {
             return this.versioning;
         }
         
+        public String getProjectDir() {
+        	return null;
+        }
+        
+        public boolean subMenuUsed(String target) {
+        	return false;
+        }
+        
+        public boolean getBooleanPreference(String key) {
+        	return false;
+        }
+        
         public String getDisplayName() {
             return "Xcode build";
         }
@@ -363,10 +375,6 @@ public class XcodeBuilder extends Builder {
         		return true;
         	
             return false;
-        }
-        
-        public boolean subMenuUsed(String target) {
-        	return false;
         }
         
         public String[] getProjectDirs(String workspace) {
@@ -498,7 +506,7 @@ public class XcodeBuilder extends Builder {
     @SuppressWarnings("serial")
 	private final class DSYMFileFilter implements FileFilter,Serializable {
         public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".dSym");
+            return pathname.isDirectory() && pathname.getName().endsWith(".app.dSYM");
         }
     }
 }

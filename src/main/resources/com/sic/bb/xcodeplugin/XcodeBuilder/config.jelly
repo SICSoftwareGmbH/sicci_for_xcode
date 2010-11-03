@@ -50,25 +50,50 @@
 	<!--    -->
 
 	<f:block>
+		<j:choose>
+			<j:when test="${it.getScm().getClass() == 'class hudson.scm.NullSCM'}">
+				<div style="margin:10px 0px 10px 20px;">
+					<span style="font-weight:bold;">${%Warning: please configure a SCM first and save}</span>
+				</div>
+			</j:when>
+			
+			<j:when test="${!it.getSomeWorkspace().exists()}">
+				<div style="margin:10px 0px 10px 20px;">
+					<span style="font-weight:bold;">${%Warning: you've to poll SCM first, via starting a build}</span>
+				</div>
+			</j:when>
+			
+			<j:otherwise>
+			
+			
 		<table style="margin:10px 0px 0px 10px">
 			<f:advanced>
 				<f:entry title="${%Project directory}" help="/plugin/XcodeBuilder/help-projectdir.html">
 					<select name="ProjectDir" field="ProjectDir">
+					
+					<j:set var="loop" value="0" />	
 					<j:forEach items="${descriptor.getProjectDirs(workspace)}" var="projectDir">
 						<j:choose>
-						<j:when test="${projectDir == ''}">
-							<option value="">${%project root dir}</option>
-						</j:when>
-						<j:when test="${builder.getProjectDir() != projectDir}">
-							<option value="${projectDir}">${projectDir}</option>
-						</j:when>
-						<j:otherwise>
-							<option value="${projectDir}" selected="selected">${projectDir}</option>
-						</j:otherwise>
+							<j:when test="${projectDir == ''}">
+								<option value="">${%project root dir}</option>
+							</j:when>
+							<j:when test="${builder.getProjectDir() != projectDir}">
+								<option value="${projectDir}">${projectDir}</option>
+								
+								<j:if test="${builder == descriptor and loop == 0}">
+									<j:set scope="parent" var="workspace" value="${workspace + '/' + projectDir}" />
+									<j:set var="loop" value="1" />
+								</j:if>
+							</j:when>
+							<j:otherwise>
+								<option value="${projectDir}" selected="selected">${projectDir}</option>
+							</j:otherwise>
 						</j:choose>
 					</j:forEach>
 					</select>
 				</f:entry>
+				
+				<j:set scope="parent" var="workspace" value="${workspace}" />
 				
 				<f:entry title="${%IPA filename}" help="/plugin/XcodeBuilder/help-ipafilename.html">
 					<f:textbox field="IPAfilename" />
@@ -85,7 +110,7 @@
 					</j:otherwise>
 				</j:choose>
 				
-				<!--
+				<!-- AJAX Test
 				<f:entry>
 					<input type="button" class="yui-button" value="click me" 
 							onClick="refreshPartBene('haha','${rootURL}/plugin/XcodeBuilder/test.jelly')" />
@@ -94,29 +119,6 @@
 				
 			</f:advanced>
 		</table>
-
-		<j:choose>
-			<j:when test="${it.getScm().getClass() == 'class hudson.scm.NullSCM'}">
-				<div style="margin:10px 0px 10px 20px;">
-					<span style="font-weight:bold;">${%Please configure a SCM first and save}</span>
-				</div>
-			</j:when>
-			
-			<j:when test="${!it.getSomeWorkspace().exists()}">
-				<div style="margin:10px 0px 10px 20px;">
-					<span style="font-weight:bold;">${%Poll first}</span>
-				</div>
-			</j:when>
-			
-			<!--
-			<j:when test="${builder == descriptor}">
-				<div style="margin:10px 0px 10px 20px;">
-					<span style="font-weight:bold;">${%Xcode Builder not yet saved}</span>
-				</div>
-			</j:when>
-			-->
-			
-			<j:otherwise>
 			
 		<div style="margin:10px 0px 10px 20px;">
 			<span style="font-weight:bold;">${%Build Targets}:</span>

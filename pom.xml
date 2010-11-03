@@ -3,14 +3,14 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.381</version><!-- which version of Hudson is this plugin built against? -->
+    <version>1.383</version><!-- which version of Hudson is this plugin built against? -->
     <relativePath>../pom.xml</relativePath>
   </parent>
 
   <groupId>com.sic.bb.xcodeplugin</groupId>
   <artifactId>XcodeBuilder</artifactId>
   <name>XcodeBuilder Plugin</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
