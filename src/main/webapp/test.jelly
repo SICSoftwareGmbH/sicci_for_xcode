@@ -1,8 +1,6 @@
-<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:s="/lib/form">
-
 	<div id="haha">
-		${rootURL}
+		<span>Test 123</span>
 	</div>
 	<!--
 	${h}
@@ -12,5 +10,4 @@
 	${builder}
 	${p.toString()}
 	-->
-
 </j:jelly>

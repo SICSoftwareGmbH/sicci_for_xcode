@@ -29,6 +29,7 @@
 	            }
 	        });
 	    };
+	    
 	</script>
 	
 	<!-- get xcode builder/descriptor -->
@@ -52,8 +53,23 @@
 		<table style="margin:10px 0px 0px 10px">
 			<f:advanced>
 				<f:entry title="${%Project directory}" help="/plugin/XcodeBuilder/help-projectdir.html">
-					<f:textbox field="ProjectDir" />
+					<select name="ProjectDir" field="ProjectDir">
+					<j:forEach items="${descriptor.getProjectDirs(workspace)}" var="projectDir">
+						<j:choose>
+						<j:when test="${projectDir == ''}">
+							<option value="">${%project root dir}</option>
+						</j:when>
+						<j:when test="${builder.getProjectDir() != projectDir}">
+							<option value="${projectDir}">${projectDir}</option>
+						</j:when>
+						<j:otherwise>
+							<option value="${projectDir}" selected="selected">${projectDir}</option>
+						</j:otherwise>
+						</j:choose>
+					</j:forEach>
+					</select>
 				</f:entry>
+				
 				<f:entry title="${%IPA filename}" help="/plugin/XcodeBuilder/help-ipafilename.html">
 					<f:textbox field="IPAfilename" />
 				</f:entry>
@@ -69,12 +85,13 @@
 					</j:otherwise>
 				</j:choose>
 				
+				<!--
 				<f:entry>
-					<!--<input type="button" class="yui-button" value="click me" 
-							onClick="refreshPartBene('haha','${rootURL}/plugin/XcodeBuilder/test.jelly')" />-->
 					<input type="button" class="yui-button" value="click me" 
-							onClick="refreshPartBene('haha','./test')" />
+							onClick="refreshPartBene('haha','${rootURL}/plugin/XcodeBuilder/test.jelly')" />
 				</f:entry>
+				-->
+				
 			</f:advanced>
 		</table>
 
@@ -85,10 +102,16 @@
 				</div>
 			</j:when>
 			
-			<!--
-			<j:when test="${builder != descriptor}">
+			<j:when test="${!it.getSomeWorkspace().exists()}">
 				<div style="margin:10px 0px 10px 20px;">
-					<span style="font-weight:bold;">${%blabla}</span>
+					<span style="font-weight:bold;">${%Poll first}</span>
+				</div>
+			</j:when>
+			
+			<!--
+			<j:when test="${builder == descriptor}">
+				<div style="margin:10px 0px 10px 20px;">
+					<span style="font-weight:bold;">${%Xcode Builder not yet saved}</span>
 				</div>
 			</j:when>
 			-->
@@ -99,8 +122,10 @@
 			<span style="font-weight:bold;">${%Build Targets}:</span>
 		</div>
 		
+		<!--
 		<div id="haha">
 		<l:ajax>
+		-->
 		
 		<table style="margin-left:40px" width="100%">
 		<j:forEach items="${builder.getBuildTargets(workspace)}" var="target">
@@ -158,8 +183,11 @@
 		</j:forEach>
 		</table>
 		
+		<!--
 		</l:ajax>
 		</div>
+		-->
+		
 			
 			</j:otherwise>
 		</j:choose>

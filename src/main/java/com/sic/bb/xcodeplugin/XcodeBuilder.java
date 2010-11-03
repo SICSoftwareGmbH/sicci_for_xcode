@@ -365,6 +365,50 @@ public class XcodeBuilder extends Builder {
             return false;
         }
         
+        public boolean subMenuUsed(String target) {
+        	return false;
+        }
+        
+        public String[] getProjectDirs(String workspace) {
+        	ArrayList<String> projectDirs = searchXcodeProjFiles(workspace, 10);
+        	String[] projectDirsArray = new String[projectDirs.size()];
+        	
+        	for(int i = 0; i < projectDirs.size(); i++) {
+        		String path = projectDirs.get(i);
+        		
+        		projectDirsArray[i] = path.substring(workspace.length() + 1,path.length());
+        	}
+        	
+        	return projectDirsArray;
+        }
+        
+        private ArrayList<String> searchXcodeProjFiles(String workspace, int depth) {
+        	ArrayList<String> projectDirs = new ArrayList<String>();
+        	
+        	if(depth == 0)
+        		return projectDirs;
+        	
+        	FilePath dir = new FilePath(new File(workspace));
+        	
+        	try {
+        		for(FilePath xcodedirs: dir.list(new XcodeProjFileFilter()))
+        			projectDirs.add(workspace + "/");
+        		
+				for(FilePath path : dir.listDirectories()) {
+					if(!projectDirs.contains(workspace + "/" + path.getName()))
+						projectDirs.addAll(searchXcodeProjFiles(workspace + "/" + path.getName(), depth - 1));
+				}
+			} catch (IOException e) {
+				// TODO
+				projectDirs.add("IOException: " + e.getMessage());
+			} catch (InterruptedException e) {
+				// TODO
+				projectDirs.add("InterruptedException: " + e.getMessage());
+			}
+			
+			return projectDirs;
+        }
+        
         public String[] getBuildConfigurations(String workspace) {
         	return parseXcodebuildlist(workspace, "Build Configurations:");
         }
@@ -428,6 +472,13 @@ public class XcodeBuilder extends Builder {
 			
 			return stdout.toString();
         }
+        
+        @SuppressWarnings("serial")
+    	private final class XcodeProjFileFilter implements FileFilter,Serializable {
+            public boolean accept(File pathname) {
+                return pathname.isDirectory() && pathname.getName().endsWith(".xcodeproj");
+            }
+        }
     }
     
     @SuppressWarnings("serial")
@@ -447,7 +498,7 @@ public class XcodeBuilder extends Builder {
     @SuppressWarnings("serial")
 	private final class DSYMFileFilter implements FileFilter,Serializable {
         public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".ipa");
+            return pathname.isDirectory() && pathname.getName().endsWith(".dSym");
         }
     }
 }
