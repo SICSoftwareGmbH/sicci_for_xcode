@@ -22,7 +22,7 @@
 	                p.removeChild(hist);
 	                
 	                var style_attr = document.createAttribute('style');
-	                style_attr.nodeValue = 'margin:10px 0px 10px 20px;';
+	                style_attr.nodeValue = 'margin:15px 0px 10px 40px;';
 	                
 	                var span_loading = document.createElement('span');
 	                span_loading.setAttributeNode(style_attr);
@@ -39,7 +39,6 @@
 	                p.insertBefore(node, next);
 	
 	                Behaviour.applySubtree(node);
-	        	
 	        	},
 	            onSuccess: function(response) {
 	                var hist = $(id);
