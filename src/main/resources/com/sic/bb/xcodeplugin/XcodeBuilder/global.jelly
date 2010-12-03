@@ -12,6 +12,9 @@
     	<f:entry title="${%create IPA}" help="/plugin/XcodeBuilder/help-createipa.html">
     		<f:checkbox name="xcodebuild.createIPA" checked="${descriptor.getCreateIPA()}" />
     	</f:entry>
+    	<f:entry title="${%IPA filename}" help="/plugin/XcodeBuilder/help-ipafilename.html">
+    		<f:textbox name="xcodebuild.ipaFilename" value="${descriptor.getIpaFilename()}" />
+    	</f:entry>
     	<f:entry title="${%use Hudson versioning}" help="/plugin/XcodeBuilder/help-usehudsonversioning.html">
     		<f:checkbox name="xcodebuild.useHudsonVersioning" checked="${descriptor.getUseHudsonVersioning()}" />
     	</f:entry>

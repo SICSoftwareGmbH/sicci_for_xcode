@@ -120,7 +120,7 @@
 						<j:set scope="parent" var="workspace" value="${workspace}" />
 						
 						<f:entry title="${%IPA filename}" help="/plugin/XcodeBuilder/help-ipafilename.html">
-							<f:textbox field="IPAfilename" />
+							<f:textbox field="IpaFilename" />
 						</f:entry>
 						
 						<j:choose>

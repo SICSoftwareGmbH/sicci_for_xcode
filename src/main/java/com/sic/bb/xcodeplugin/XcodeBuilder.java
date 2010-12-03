@@ -1,3 +1,4 @@
+
 package com.sic.bb.xcodeplugin;
 
 import hudson.EnvVars;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -53,11 +55,11 @@ public class XcodeBuilder extends Builder {
     	return this.data.get("ProjectDir");
     }
     
-    public String getIPAFilename() {
-    	if(!this.data.containsKey("IPAfilename"))
+    public String getIpaFilename() {
+    	if(!this.data.containsKey("IpaFilename"))
     		return null;
     	
-    	return this.data.get("IPAfilename");
+    	return this.data.get("IpaFilename");
     }
     
     public String getXcodeClean() {
@@ -185,9 +187,12 @@ public class XcodeBuilder extends Builder {
 	            	if(!app.getBaseName().equals(array[0]))
 	            		continue;
 	            	
-	            	// TODO: Datum etc.
-	            	String date = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(build.getTimestamp().getTime());
-	            	FilePath ipa = buildDir.child(app.getBaseName() + "-" + date + "-b" + build.getNumber() + ".ipa");
+	            	
+	            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
+	            	
+	            	// TODO: remove old implementation
+	            	//String date = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(build.getTimestamp().getTime());
+	            	//FilePath ipa = buildDir.child(app.getBaseName() + "-" + date + "-b" + build.getNumber() + ".ipa");
 	                
 	                if(ipa.exists())
 	                	ipa.delete();
@@ -256,6 +261,28 @@ public class XcodeBuilder extends Builder {
 		return cmds;
     }
     
+    private String createIPAFilename(AbstractBuild<?,?> build, String targetName, String configName) {
+    	String ipaFileName = getIpaFilename();
+    	Date buildTimeStamp = build.getTimestamp().getTime();
+    	
+    	//ipaFileName = ipaFileName.replaceAll("{USER}", "");
+    	ipaFileName = ipaFileName.replaceAll("{SECOND}",new SimpleDateFormat("ss").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{MINUTE}",new SimpleDateFormat("mm").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{HOUR}",new SimpleDateFormat("HH").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{DAY}",new SimpleDateFormat("dd").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{MONTH}",new SimpleDateFormat("MM").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{YEAR}",new SimpleDateFormat("yyyy").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{TIME}",new SimpleDateFormat("HH_mm_ss").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{DATE}",new SimpleDateFormat("yyyy_MM_dd").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{DATETIME}",new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("{BUILD}",String.valueOf(build.getNumber()));
+    	ipaFileName = ipaFileName.replaceAll("{TARGET}",targetName);
+    	ipaFileName = ipaFileName.replaceAll("{CONFIG}",configName);
+    	ipaFileName += ".ipa";
+    	
+    	return ipaFileName;
+    }
+    
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
     	private static final Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
@@ -265,7 +292,10 @@ public class XcodeBuilder extends Builder {
         private static final String DisplayName = "Xcode build";
         
     	private final int xcodeProjSearchDepth = 10;
-        private String xcodebuild, currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
+        
+    	private String currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
+    	
+    	private String xcodebuild, ipaFilename;
         private boolean xcodeclean, clean, ipa, versioning;
         
         public DescriptorImpl() {
@@ -303,6 +333,14 @@ public class XcodeBuilder extends Builder {
         
         public boolean getCreateIPA() {
             return this.ipa;
+        }
+        
+        public void setIpaFilename(String ipaFilename) {
+        	this.ipaFilename = ipaFilename;
+        }
+        
+        public String getIpaFilename() {
+        	return this.ipaFilename;
         }
         
         public void setUseHudsonVersioning(boolean versioning) {
@@ -491,7 +529,8 @@ public class XcodeBuilder extends Builder {
 			}
 			
 			this.xcodebuildOutputTemp = stdout.toString();
-			return stdout.toString();
+			
+			return this.xcodebuildOutputTemp;
         }
         
         @SuppressWarnings("serial")
