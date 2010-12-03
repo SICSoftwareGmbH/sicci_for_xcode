@@ -1,5 +1,6 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"
 	xmlns:p="/lib/hudson/project">
+	
 	<!--
 	
 		vars:	it 			== Job (eg. instance of FreeStyleProject)
@@ -9,7 +10,7 @@
 	-->
 	
 	<script defer="defer">
-		function refreshPartXcode(id,url,projectDir) {
+		function refreshTargets(id,url,projectDir) {
 	        new Ajax.Request(url, {
 	        	method: 'post',
 	        	parameters: {
@@ -90,7 +91,7 @@
 					<f:advanced>
 						<f:entry title="${%Project directory}" help="/plugin/XcodeBuilder/help-projectdir.html">
 							<select name="ProjectDir" field="ProjectDir" 
-									onChange="refreshPartXcode(	'targets',
+									onChange="refreshTargets(	'targets',
 																'${rootURL}/builder/XcodeBuilder/ajax',
 																'${workspace}/' + ProjectDir.options[ProjectDir.selectedIndex].value)">
 							

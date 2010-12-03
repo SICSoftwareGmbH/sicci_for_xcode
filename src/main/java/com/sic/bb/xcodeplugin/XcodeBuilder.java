@@ -258,8 +258,14 @@ public class XcodeBuilder extends Builder {
     
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+    	private static final Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
+        private static final Pattern parseXcodeBuildListPattern1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
+        private static final Pattern parseXcodeBuildListPattern2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
+        
+        private static final String DisplayName = "Xcode build";
+        
     	private final int xcodeProjSearchDepth = 10;
-        private String xcodebuild, currentProjectDir;
+        private String xcodebuild, currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
         private boolean xcodeclean, clean, ipa, versioning;
         
         public DescriptorImpl() {
@@ -320,7 +326,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public String getDisplayName() {
-            return "Xcode build";
+            return DisplayName;
         }
         
         @Override
@@ -363,7 +369,6 @@ public class XcodeBuilder extends Builder {
         public void doAjax(StaplerRequest req, StaplerResponse rsp, @QueryParameter String projectDir) throws IOException, ServletException {
         	this.currentProjectDir = projectDir;
         	req.getView(this,"/com/sic/bb/xcodeplugin/XcodeBuilder/targets.jelly").forward(req, rsp);
-        	//req.getView(this,"/targets.jelly").forward(req, rsp);
         }
         
         public FormValidation doCheckXcodebuild(@QueryParameter String value) throws IOException, ServletException {
@@ -432,23 +437,20 @@ public class XcodeBuilder extends Builder {
         	return parseXcodebuildList(workspace, "Targets:");
         }
         
-        public String[] availableSdks(String workspace) {	
-			Pattern p = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
+        public String[] availableSdks(String workspace) {
 			ArrayList<String> sdks = new ArrayList<String>();
 			
 			for(String sdk: callXcodebuild(workspace,"-showsdks").toString().split("\n")) {
 				if(!sdk.contains("-sdk"))
 					continue;
 				
-				sdks.add(p.matcher(sdk).replaceAll("$1"));
+				sdks.add(availableSdksPattern.matcher(sdk).replaceAll("$1"));
 			}
         
 			return (String[]) sdks.toArray(new String[sdks.size()]);
         }
         
         private String[] parseXcodebuildList(String workspace, String arg) {
-			Pattern p1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
-			Pattern p2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
 			ArrayList<String> items = new ArrayList<String>();
 			boolean found = false;
 			
@@ -459,24 +461,27 @@ public class XcodeBuilder extends Builder {
 				}
 					
 				if(!found) continue;
-				//item = item.trim();
 				if(item.isEmpty()) break;
 				
-				item = p1.matcher(item).replaceAll("$1");
-				items.add(p2.matcher(item).replaceAll("$1"));
+				item = parseXcodeBuildListPattern1.matcher(item).replaceAll("$1");
+				items.add(parseXcodeBuildListPattern2.matcher(item).replaceAll("$1"));
 			}
         
 			return (String[]) items.toArray(new String[items.size()]);
         }
         
-        private String callXcodebuild(String workspace, String arg) {        	
+        private String callXcodebuild(String workspace, String arg) {
+        	if(this.workspaceTemp != null && this.workspaceTemp.equals(workspace + arg))
+        		return this.xcodebuildOutputTemp;
+        	else
+        		this.workspaceTemp = workspace + arg;
+        	
 	    	FilePath file = new FilePath(new File(this.xcodebuild));
 	    	ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 	    	
 	    	try {
 	    		Launcher launcher = file.createLauncher(new StreamTaskListener(new ByteArrayOutputStream()));
 	    		launcher.launch().stdout(stdout).pwd(workspace).cmds(this.xcodebuild, arg).join();
-				
 			} catch (IOException e) {
 				// TODO
 				return "IOException: " + e.getMessage();
@@ -485,6 +490,7 @@ public class XcodeBuilder extends Builder {
 				return "InterruptedException: " + e.getMessage();
 			}
 			
+			this.xcodebuildOutputTemp = stdout.toString();
 			return stdout.toString();
         }
         
