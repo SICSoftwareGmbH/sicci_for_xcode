@@ -76,7 +76,7 @@ public class XcodeBuilder extends Builder {
     
     public boolean subMenuUsed(String target) {
     	for(String key: (String[]) this.data.keySet().toArray(new String[this.data.size()])) {
-    		if(key.contains(target))
+    		if(key.contains(target + "|"))
     			return true;
     	}
     	
