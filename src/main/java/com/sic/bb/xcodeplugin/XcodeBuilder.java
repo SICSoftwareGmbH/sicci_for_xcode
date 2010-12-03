@@ -18,6 +18,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerResponse;
 
 
 import javax.servlet.ServletException;
@@ -70,10 +71,7 @@ public class XcodeBuilder extends Builder {
     	if(!this.data.containsKey(key))
     		return false;
     	
-    	if(this.data.get(key).equals("true"))
-    		return true;
-    	else
-    		return false;
+    	return this.data.get(key).equals("true");
     }
     
     public boolean subMenuUsed(String target) {
@@ -120,7 +118,7 @@ public class XcodeBuilder extends Builder {
         
         if(getProjectDir() != null)
 			workspace = workspace.child(getProjectDir());
-                
+        
         try {
         	EnvVars envs = build.getEnvironment(listener);
         	
@@ -215,8 +213,10 @@ public class XcodeBuilder extends Builder {
 				return true;
 			
 		} catch (IOException e) {
+			// TODO
 			listener.getLogger().println("IOException:" + e.getMessage());
 		} catch (InterruptedException e) {
+			// TODO
 			listener.getLogger().println("InterruptedException: " + e.getMessage());
 		}
         
@@ -255,10 +255,11 @@ public class XcodeBuilder extends Builder {
 		
 		return cmds;
     }
-
+    
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        private String xcodebuild;
+    	private final int xcodeProjSearchDepth = 10;
+        private String xcodebuild, currentProjectDir;
         private boolean xcodeclean, clean, ipa, versioning;
         
         public DescriptorImpl() {
@@ -307,7 +308,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public String getProjectDir() {
-        	return null;
+        	return this.currentProjectDir;
         }
         
         public boolean subMenuUsed(String target) {
@@ -359,6 +360,12 @@ public class XcodeBuilder extends Builder {
             return super.configure(req,formData);
         }
         
+        public void doAjax(StaplerRequest req, StaplerResponse rsp, @QueryParameter String projectDir) throws IOException, ServletException {
+        	this.currentProjectDir = projectDir;
+        	req.getView(this,"/com/sic/bb/xcodeplugin/XcodeBuilder/targets.jelly").forward(req, rsp);
+        	//req.getView(this,"/targets.jelly").forward(req, rsp);
+        }
+        
         public FormValidation doCheckXcodebuild(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
         		return FormValidation.error("insert absolute path to xcodebuild");
@@ -378,7 +385,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public String[] getProjectDirs(String workspace) {
-        	ArrayList<String> projectDirs = searchXcodeProjFiles(workspace, 10);
+        	ArrayList<String> projectDirs = searchXcodeProjFiles(workspace, this.xcodeProjSearchDepth);
         	String[] projectDirsArray = new String[projectDirs.size()];
         	
         	for(int i = 0; i < projectDirs.size(); i++) {
@@ -399,7 +406,7 @@ public class XcodeBuilder extends Builder {
         	FilePath dir = new FilePath(new File(workspace));
         	
         	try {
-        		for(FilePath xcodedirs: dir.list(new XcodeProjFileFilter()))
+        		if(dir.list(new XcodeProjFileFilter()).size() != 0)
         			projectDirs.add(workspace + "/");
         		
 				for(FilePath path : dir.listDirectories()) {
@@ -418,11 +425,11 @@ public class XcodeBuilder extends Builder {
         }
         
         public String[] getBuildConfigurations(String workspace) {
-        	return parseXcodebuildlist(workspace, "Build Configurations:");
+        	return parseXcodebuildList(workspace, "Build Configurations:");
         }
         
         public String[] getBuildTargets(String workspace) {
-        	return parseXcodebuildlist(workspace, "Targets:");
+        	return parseXcodebuildList(workspace, "Targets:");
         }
         
         public String[] availableSdks(String workspace) {	
@@ -439,7 +446,7 @@ public class XcodeBuilder extends Builder {
 			return (String[]) sdks.toArray(new String[sdks.size()]);
         }
         
-        private String[] parseXcodebuildlist(String workspace, String arg) {
+        private String[] parseXcodebuildList(String workspace, String arg) {
 			Pattern p1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
 			Pattern p2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
 			ArrayList<String> items = new ArrayList<String>();
@@ -496,6 +503,7 @@ public class XcodeBuilder extends Builder {
         }
     }
     
+    /*
     @SuppressWarnings("serial")
 	private final class IPAFileFilter implements FileFilter,Serializable {
         public boolean accept(File pathname) {
@@ -509,4 +517,5 @@ public class XcodeBuilder extends Builder {
             return pathname.isDirectory() && pathname.getName().endsWith(".app.dSYM");
         }
     }
+    */
 }

@@ -5,22 +5,50 @@
 		vars:	it 			== Job (eg. instance of FreeStyleProject)
 				instance	== Builder (here: current instance of XcodeBuilder)
 				descriptor	== Descriptor (here: inner class of XcodeBuilder)
-				request		== Stapler request
-				response	== Stapler response
 				 
 	-->
 	
 	<script defer="defer">
-		function refreshPartBene(id,url) {
+		function refreshPartXcode(id,url,projectDir) {
 	        new Ajax.Request(url, {
-	            onSuccess: function(rsp) {
+	        	method: 'post',
+	        	parameters: {
+	        		projectDir: projectDir
+	        	},
+	        	onLoading: function() {
+	        		var hist = $(id);
+	                var p = hist.parentNode;
+	                var next = hist.nextSibling;
+	                p.removeChild(hist);
+	                
+	                var style_attr = document.createAttribute('style');
+	                style_attr.nodeValue = 'margin:10px 0px 10px 20px;';
+	                
+	                var span_loading = document.createElement('span');
+	                span_loading.setAttributeNode(style_attr);
+	                span_loading.appendChild(document.createTextNode('loading...'));
+	                
+	                var div_targets = document.createElement('div');
+	                div_targets.id = 'targets';
+	                div_targets.appendChild(span_loading);
+	                
+	                var div = document.createElement('div');
+	                div.appendChild(div_targets);
+	
+	                var node = div.firstChild;
+	                p.insertBefore(node, next);
+	
+	                Behaviour.applySubtree(node);
+	        	
+	        	},
+	            onSuccess: function(response) {
 	                var hist = $(id);
 	                var p = hist.parentNode;
 	                var next = hist.nextSibling;
 	                p.removeChild(hist);
 	
 	                var div = document.createElement('div');
-	                div.innerHTML = rsp.responseText;
+	                div.innerHTML = response.responseText;
 	
 	                var node = div.firstChild;
 	                p.insertBefore(node, next);
@@ -28,29 +56,21 @@
 	                Behaviour.applySubtree(node);
 	            }
 	        });
-	    };
-	    
+	    };  
 	</script>
 	
-	<!-- get xcode builder/descriptor -->
+	<!-- get global vars -->
 	
-	<j:choose>
-	<j:when test="${instance == null}">
-		<j:set var="builder" value="${descriptor}" />
-	</j:when>
-	<j:otherwise>
-		<j:set var="builder" value="${instance}" />
-	</j:otherwise>
-	</j:choose>
-	
-	<!-- get workspace -->
-	
+	<j:set var="builder" value="${instance}" defaultValue="${descriptor}" />
 	<j:set var="workspace" value="${it.getSomeWorkspace().toString()}" />
 	
 	<!--    -->
 
 	<f:block>
 		<j:choose>
+		
+			<!-- something is missing -->
+		
 			<j:when test="${it.getScm().getClass() == 'class hudson.scm.NullSCM'}">
 				<div style="margin:10px 0px 10px 20px;">
 					<span style="font-weight:bold;">${%Warning: please configure a SCM first and save}</span>
@@ -65,132 +85,118 @@
 			
 			<j:otherwise>
 			
-			
-		<table style="margin:10px 0px 0px 10px">
-			<f:advanced>
-				<f:entry title="${%Project directory}" help="/plugin/XcodeBuilder/help-projectdir.html">
-					<select name="ProjectDir" field="ProjectDir">
-					
-					<j:set var="loop" value="0" />	
-					<j:forEach items="${descriptor.getProjectDirs(workspace)}" var="projectDir">
-						<j:choose>
-							<j:when test="${projectDir == ''}">
-								<option value="">${%project root dir}</option>
-							</j:when>
-							<j:when test="${builder.getProjectDir() != projectDir}">
-								<option value="${projectDir}">${projectDir}</option>
+				<!-- everything is ok -->
 								
-								<j:if test="${builder == descriptor and loop == 0}">
-									<j:set scope="parent" var="workspace" value="${workspace + '/' + projectDir}" />
-									<j:set var="loop" value="1" />
-								</j:if>
+				<table style="margin:10px 0px 0px 10px">
+					<f:advanced>
+						<f:entry title="${%Project directory}" help="/plugin/XcodeBuilder/help-projectdir.html">
+							<select name="ProjectDir" field="ProjectDir" 
+									onChange="refreshPartXcode(	'targets',
+																'${rootURL}/builder/XcodeBuilder/ajax',
+																'${workspace}/' + ProjectDir.options[ProjectDir.selectedIndex].value)">
+							
+							<j:set var="loop" value="0" />
+							<j:forEach items="${descriptor.getProjectDirs(workspace)}" var="projectDir">
+								<j:choose>
+									<j:when test="${empty(projectDir)}">
+										<option value="">${%project root dir}</option>
+									</j:when>
+									<j:when test="${builder.getProjectDir() != projectDir}">
+										<option value="${projectDir}">${projectDir}</option>
+										
+										<j:if test="${builder == descriptor and loop == 0}">
+											<j:set scope="parent" var="workspace" value="${workspace + '/' + projectDir}" />
+											<j:set var="loop" value="1" />
+										</j:if>
+									</j:when>
+									<j:otherwise>
+										<option value="${projectDir}" selected="selected">${projectDir}</option>
+									</j:otherwise>
+								</j:choose>
+							</j:forEach>
+							</select>
+						</f:entry>
+						
+						<j:set scope="parent" var="workspace" value="${workspace}" />
+						
+						<f:entry title="${%IPA filename}" help="/plugin/XcodeBuilder/help-ipafilename.html">
+							<f:textbox field="IPAfilename" />
+						</f:entry>
+						
+						<j:choose>
+							<j:when test="${!descriptor.getXcodeClean()}">
+								<f:entry title="${%use Xcode for cleanup}" help="/plugin/XcodeBuilder/help-xcodeclean.html">
+									<f:checkbox field="XcodeClean" />
+								</f:entry>
 							</j:when>
 							<j:otherwise>
-								<option value="${projectDir}" selected="selected">${projectDir}</option>
+								<input type="hidden" field="XcodeClean" value="true" />
 							</j:otherwise>
 						</j:choose>
-					</j:forEach>
-					</select>
-				</f:entry>
-				
-				<j:set scope="parent" var="workspace" value="${workspace}" />
-				
-				<f:entry title="${%IPA filename}" help="/plugin/XcodeBuilder/help-ipafilename.html">
-					<f:textbox field="IPAfilename" />
-				</f:entry>
-				
-				<j:choose>
-					<j:when test="${!descriptor.getXcodeClean()}">
-						<f:entry title="${%use Xcode for cleanup}" help="/plugin/XcodeBuilder/help-xcodeclean.html">
-							<f:checkbox field="XcodeClean" />
-						</f:entry>
-					</j:when>
-					<j:otherwise>
-						<input type="hidden" field="XcodeClean" value="true" />
-					</j:otherwise>
-				</j:choose>
-				
-				<!-- AJAX Test
-				<f:entry>
-					<input type="button" class="yui-button" value="click me" 
-							onClick="refreshPartBene('haha','${rootURL}/plugin/XcodeBuilder/test.jelly')" />
-				</f:entry>
-				-->
-				
-			</f:advanced>
-		</table>
-			
-		<div style="margin:10px 0px 10px 20px;">
-			<span style="font-weight:bold;">${%Build Targets}:</span>
-		</div>
-		
-		<!--
-		<div id="haha">
-		<l:ajax>
-		-->
-		
-		<table style="margin-left:40px" width="100%">
-		<j:forEach items="${builder.getBuildTargets(workspace)}" var="target">
-			<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(target)}">
-				<f:nested>
-				<table width="100%">
-				<div style="margin:5px 0px 5px 0px">
-					<span style="font-weight:bold;">${%Build Configurations}:</span>
+					</f:advanced>
+				</table>
+					
+				<div style="margin:10px 0px 10px 20px;">
+					<span style="font-weight:bold;">${%Build Targets}:</span>
 				</div>
 				
-				<j:forEach items="${builder.getBuildConfigurations(workspace)}" var="config">
-					<f:optionalBlock title="${config}" checked="${builder.subMenuUsed(target + '|' + config)}">
-						<f:nested>
-						<table>
-							<j:choose>
-								<j:when test="${!descriptor.getCleanBeforeBuild()}">
-									<f:entry title="${%clean before build:}">
-										<f:checkbox field="${target}|${config}|clean" 
-											checked="${builder.getBooleanPreference(target + '|' + config + '|clean')}" />
-									</f:entry>
-								</j:when>
-								<j:otherwise>
-									<input type="hidden" name="${target}|${config}|clean" value="true" />
-								</j:otherwise>
-							</j:choose>
-							<j:choose>
-								<j:when test="${!descriptor.getCreateIPA()}">
-									<f:entry title="${%create IPA:}">
-										<f:checkbox field="${target}|${config}|ipa" 
-											checked="${builder.getBooleanPreference(target + '|' + config  + '|ipa')}" />
-									</f:entry>
-								</j:when>
-								<j:otherwise>
-									<input type="hidden" name="${target}|${config}|ipa" value="true" />
-								</j:otherwise>
-							</j:choose>
-							<j:choose>
-								<j:when test="${!descriptor.getUseHudsonVersioning()}">
-									<f:entry title="${%use Hudson versioning:}">
-										<f:checkbox field="${target}|${config}|versioning" 
-											checked="${builder.getBooleanPreference(target + '|' + config  + '|versioning')}" />
-									</f:entry>
-								</j:when>
-								<j:otherwise>
-									<input type="hidden" name="${target}|${config}|versioning" value="true" />
-								</j:otherwise>
-							</j:choose>
-						</table>
-						</f:nested>
-					</f:optionalBlock>
-				</j:forEach>
-				</table>
-				</f:nested>
-			</f:optionalBlock>
-		</j:forEach>
-		</table>
-		
-		<!--
-		</l:ajax>
-		</div>
-		-->
-		
-			
+				<div id="targets">
+					<table style="margin-left:40px" width="100%">
+					<j:forEach items="${builder.getBuildTargets(workspace)}" var="target">
+						<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(target)}">
+							<f:nested>
+							<table width="100%">
+							<div style="margin:5px 0px 5px 0px">
+								<span style="font-weight:bold;">${%Build Configurations}:</span>
+							</div>
+							
+							<j:forEach items="${builder.getBuildConfigurations(workspace)}" var="config">
+								<f:optionalBlock title="${config}" checked="${builder.subMenuUsed(target + '|' + config)}">
+									<f:nested>
+									<table>
+										<j:choose>
+											<j:when test="${!descriptor.getCleanBeforeBuild()}">
+												<f:entry title="${%clean before build:}">
+													<f:checkbox field="${target}|${config}|clean" 
+														checked="${builder.getBooleanPreference(target + '|' + config + '|clean')}" />
+												</f:entry>
+											</j:when>
+											<j:otherwise>
+												<input type="hidden" name="${target}|${config}|clean" value="true" />
+											</j:otherwise>
+										</j:choose>
+										<j:choose>
+											<j:when test="${!descriptor.getCreateIPA()}">
+												<f:entry title="${%create IPA:}">
+													<f:checkbox field="${target}|${config}|ipa" 
+														checked="${builder.getBooleanPreference(target + '|' + config  + '|ipa')}" />
+												</f:entry>
+											</j:when>
+											<j:otherwise>
+												<input type="hidden" name="${target}|${config}|ipa" value="true" />
+											</j:otherwise>
+										</j:choose>
+										<j:choose>
+											<j:when test="${!descriptor.getUseHudsonVersioning()}">
+												<f:entry title="${%use Hudson versioning:}">
+													<f:checkbox field="${target}|${config}|versioning" 
+														checked="${builder.getBooleanPreference(target + '|' + config  + '|versioning')}" />
+												</f:entry>
+											</j:when>
+											<j:otherwise>
+												<input type="hidden" name="${target}|${config}|versioning" value="true" />
+											</j:otherwise>
+										</j:choose>
+									</table>
+									</f:nested>
+								</f:optionalBlock>
+							</j:forEach>
+							</table>
+							</f:nested>
+						</f:optionalBlock>
+					</j:forEach>
+					</table>
+				</div>
 			</j:otherwise>
 		</j:choose>
 	</f:block>
