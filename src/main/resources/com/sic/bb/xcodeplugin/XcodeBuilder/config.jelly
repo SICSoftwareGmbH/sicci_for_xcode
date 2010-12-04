@@ -130,7 +130,7 @@
 								</f:entry>
 							</j:when>
 							<j:otherwise>
-								<input type="hidden" field="XcodeClean" value="true" />
+								<input type="hidden" name="XcodeClean" value="true" />
 							</j:otherwise>
 						</j:choose>
 					</f:advanced>

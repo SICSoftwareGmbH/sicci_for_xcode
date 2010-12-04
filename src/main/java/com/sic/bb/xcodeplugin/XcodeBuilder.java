@@ -62,11 +62,11 @@ public class XcodeBuilder extends Builder {
     	return this.data.get("IpaFilename");
     }
     
-    public String getXcodeClean() {
+    public boolean getXcodeClean() {
     	if(!this.data.containsKey("XcodeClean"))
-    		return null;
+    		return false;
     	
-    	return this.data.get("XcodeClean");
+    	return this.data.get("XcodeClean").equals("true");
     }
     
     public boolean getBooleanPreference(String key) {
@@ -137,7 +137,7 @@ public class XcodeBuilder extends Builder {
 			List<Integer> returnCodes = new ArrayList<Integer>();
 			
 			// cleanup
-			if(getXcodeClean().equals("true"))
+			if(getXcodeClean())
 				for(String toClean: getToPerformStep("clean"))
 					returnCodes.add(launcher.launch().envs(envs).stdout(listener).pwd(workspace).
 							cmds(createCmds(xcodebuild,toClean,"clean")).join());
@@ -189,10 +189,6 @@ public class XcodeBuilder extends Builder {
 	            	
 	            	
 	            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
-	            	
-	            	// TODO: remove old implementation
-	            	//String date = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(build.getTimestamp().getTime());
-	            	//FilePath ipa = buildDir.child(app.getBaseName() + "-" + date + "-b" + build.getNumber() + ".ipa");
 	                
 	                if(ipa.exists())
 	                	ipa.delete();
@@ -265,19 +261,19 @@ public class XcodeBuilder extends Builder {
     	String ipaFileName = getIpaFilename();
     	Date buildTimeStamp = build.getTimestamp().getTime();
     	
-    	//ipaFileName = ipaFileName.replaceAll("{USER}", "");
-    	ipaFileName = ipaFileName.replaceAll("{SECOND}",new SimpleDateFormat("ss").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{MINUTE}",new SimpleDateFormat("mm").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{HOUR}",new SimpleDateFormat("HH").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{DAY}",new SimpleDateFormat("dd").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{MONTH}",new SimpleDateFormat("MM").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{YEAR}",new SimpleDateFormat("yyyy").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{TIME}",new SimpleDateFormat("HH_mm_ss").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{DATE}",new SimpleDateFormat("yyyy_MM_dd").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{DATETIME}",new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("{BUILD}",String.valueOf(build.getNumber()));
-    	ipaFileName = ipaFileName.replaceAll("{TARGET}",targetName);
-    	ipaFileName = ipaFileName.replaceAll("{CONFIG}",configName);
+    	//ipaFileName = ipaFileName.replaceAll("<USER>", "");
+    	ipaFileName = ipaFileName.replaceAll("<SECOND>",new SimpleDateFormat("ss").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<MINUTE>",new SimpleDateFormat("mm").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<HOUR>",new SimpleDateFormat("HH").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<DAY>",new SimpleDateFormat("dd").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<MONTH>",new SimpleDateFormat("MM").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<YEAR>",new SimpleDateFormat("yyyy").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<TIME>",new SimpleDateFormat("HH_mm_ss").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<DATE>",new SimpleDateFormat("yyyy_MM_dd").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<DATETIME>",new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(buildTimeStamp));
+    	ipaFileName = ipaFileName.replaceAll("<BUILD>",String.valueOf(build.getNumber()));
+    	ipaFileName = ipaFileName.replaceAll("<TARGET>",targetName);
+    	ipaFileName = ipaFileName.replaceAll("<CONFIG>",configName);
     	ipaFileName += ".ipa";
     	
     	return ipaFileName;
