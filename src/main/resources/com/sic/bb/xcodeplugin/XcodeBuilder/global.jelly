@@ -1,22 +1,61 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-	<f:section title="Xcode Builder">  
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form"
+	xmlns:xb="com/sic/bb/xcodeplugin/XcodeBuilder/lib">
+	
+	<f:section title="Xcode Builder">
     	<f:entry title="${%xcodebuild}" field="xcodebuild" help="/plugin/XcodeBuilder/help-xcodebuild.html">
     		<f:textbox name="xcodebuild.xcodebuild" value="${descriptor.getXcodebuild()}" />
     	</f:entry>
-    	<f:entry title="${%use Xcode for cleanup}" help="/plugin/XcodeBuilder/help-xcodeclean.html">
-    		<f:checkbox name="xcodebuild.xcodeClean" checked="${descriptor.getXcodeClean()}" />
-    	</f:entry>
-    	<f:entry title="${%clean before build}" help="/plugin/XcodeBuilder/help-cleanbeforebuild.html">
-    		<f:checkbox name="xcodebuild.cleanBeforeBuild" checked="${descriptor.getCleanBeforeBuild()}" />
-    	</f:entry>
-    	<f:entry title="${%create IPA}" help="/plugin/XcodeBuilder/help-createipa.html">
-    		<f:checkbox name="xcodebuild.createIPA" checked="${descriptor.getCreateIPA()}" />
-    	</f:entry>
-    	<f:entry title="${%IPA filename}" help="/plugin/XcodeBuilder/help-ipafilename.html">
-    		<f:textbox name="xcodebuild.ipaFilename" value="${descriptor.getIpaFilename()}" />
-    	</f:entry>
-    	<f:entry title="${%use Hudson versioning}" help="/plugin/XcodeBuilder/help-usehudsonversioning.html">
-    		<f:checkbox name="xcodebuild.useHudsonVersioning" checked="${descriptor.getUseHudsonVersioning()}" />
-    	</f:entry>
+    	
+    	<xb:customEntry title="${%use Xcode for cleanup}" help="help-xcodeclean.html">
+			<td style="width:0%;">
+				<f:checkbox name="xcodebuild.xcodeClean" checked="${descriptor.getXcodeClean()}" />
+			</td>
+			<td style="width:100%;padding:0 0 0 10px;margin:0px;">
+				${%overwrite project settings:}
+				<f:checkbox name="xcodebuild.xcodeCleanGlobal" checked="${descriptor.getXcodeCleanGlobal()}" />	
+			</td>
+    	</xb:customEntry>
+    	
+    	<xb:customEntry title="${%clean before build}" help="help-cleanbeforebuild.html">
+    		<td style="width:0%;">
+    			<f:checkbox name="xcodebuild.cleanBeforeBuild" checked="${descriptor.getCleanBeforeBuild()}" />
+    		</td>
+    		<td style="width:100%;padding:0 0 0 10px;margin:0px;">
+				${%overwrite project settings:}
+				<f:checkbox name="xcodebuild.cleanBeforeBuildGlobal" checked="${descriptor.getCleanBeforeBuildGlobal()}" />	 			
+    		</td>
+    	</xb:customEntry>
+    	
+    	<xb:customEntry title="${%create IPA}" help="help-createipa.html">
+    		<td style="width:0%;">
+    			<f:checkbox name="xcodebuild.createIpa" checked="${descriptor.getCreateIpa()}" />
+    		</td>
+    		<td style="width:100%;padding:0 0 0 10px;margin:0px;">
+    			${%overwrite project settings:}
+    			<f:checkbox name="xcodebuild.createIpaGlobal" checked="${descriptor.getCreateIpaGlobal()}" />
+    		</td>
+    	</xb:customEntry>
+    	
+    	<xb:customEntry title="${%IPA filename}" help="help-ipafilename.html">
+    		<td style="width:100%;">
+    			<f:textbox name="xcodebuild.ipaFilename" value="${descriptor.getIpaFilename()}" />
+    		</td>
+    		<td style="width:00%;padding:0 0 0 10px;margin:0px;white-space:nowrap;">
+    			${%overwrite project settings:}
+    			<f:checkbox name="xcodebuild.ipaFilenameGlobal" checked="${descriptor.getIpaFilenameGlobal()}" />
+    		</td>
+    	</xb:customEntry>
+    	
+    	<!--
+    	<xb:customEntry title="${%use Hudson versioning}" help="help-usehudsonversioning.html">
+    		<td style="width:0%;">
+    			<f:checkbox name="xcodebuild.useHudsonVersioning" checked="${descriptor.getUseHudsonVersioning()}" />
+    		</td>
+    		<td style="width:100%;padding:0 0 0 10px;margin:0px;">
+    			${%overwrite project settings:}
+    			<f:checkbox name="xcodebuild.useHudsonVersioningGlobal" checked="${descriptor.getUseHudsonVersioningGlobal()}" />
+    		</td>
+    	</xb:customEntry>
+    	-->
 	</f:section>
 </j:jelly>

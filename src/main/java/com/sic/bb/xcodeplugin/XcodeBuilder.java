@@ -180,8 +180,6 @@ public class XcodeBuilder extends Builder {
 				}
 				
 				List<FilePath> apps = buildDir.list(new APPFileFilter());
-				//List<FilePath> ipas = buildDir.list(new IPAFileFilter());
-				//List<FilePath> dsyms = buildDir.list(new DSYMFileFilter());
 				
 	            for(FilePath app: apps) {
 	            	if(!app.getBaseName().equals(array[0]))
@@ -292,7 +290,11 @@ public class XcodeBuilder extends Builder {
     	private String currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
     	
     	private String xcodebuild, ipaFilename;
-        private boolean xcodeclean, clean, ipa, versioning;
+        private boolean ipaFilenameGlobal;
+        private boolean xcodeClean, xcodeCleanGlobal;
+        private boolean cleanBeforeBuild, cleanBeforeBuildGlobal;
+        private boolean createIpa, createIpaGlobal;
+        private boolean versioning;
         
         public DescriptorImpl() {
         	super();
@@ -308,27 +310,51 @@ public class XcodeBuilder extends Builder {
         }
         
         public void setXcodeClean(boolean clean) {
-        	this.xcodeclean = clean;
+        	this.xcodeClean = clean;
         }
         
         public boolean getXcodeClean() {
-            return this.xcodeclean;
+            return this.xcodeClean;
+        }
+
+        public void setXcodeCleanGlobal(boolean clean) {
+        	this.xcodeCleanGlobal = clean;
+        }
+        
+        public boolean getXcodeCleanGlobal() {
+        	return this.xcodeCleanGlobal;
         }
         
         public void setCleanBeforeBuild(boolean clean) {
-        	this.clean = clean;
+        	this.cleanBeforeBuild = clean;
         }
         
         public boolean getCleanBeforeBuild() {
-            return this.clean;
+            return this.cleanBeforeBuild;
         }
         
-        public void setCreateIPA(boolean ipa) {
-        	this.ipa = ipa;
+        public void setCleanBeforeBuildGlobal(boolean clean) {
+        	this.cleanBeforeBuildGlobal = clean;
         }
         
-        public boolean getCreateIPA() {
-            return this.ipa;
+        public boolean getCleanBeforeBuildGlobal() {
+            return this.cleanBeforeBuildGlobal;
+        }
+        
+        public void setCreateIpa(boolean ipa) {
+        	this.createIpa = ipa;
+        }
+        
+        public boolean getCreateIpa() {
+            return this.createIpa;
+        }
+        
+        public void setCreateIpaGlobal(boolean ipa) {
+        	this.createIpaGlobal = ipa;
+        }
+        
+        public boolean getCreateIpaGlobal() {
+            return this.createIpaGlobal;
         }
         
         public void setIpaFilename(String ipaFilename) {
@@ -339,6 +365,15 @@ public class XcodeBuilder extends Builder {
         	return this.ipaFilename;
         }
         
+        public void setIpaFilenameGlobal(boolean ipaFilenameGlobal) {
+        	this.ipaFilenameGlobal = ipaFilenameGlobal;
+        }
+        
+        public boolean getIpaFilenameGlobal() {
+        	return this.ipaFilenameGlobal;
+        }
+        
+        /*
         public void setUseHudsonVersioning(boolean versioning) {
         	this.versioning = versioning;
         }
@@ -346,6 +381,8 @@ public class XcodeBuilder extends Builder {
         public boolean getUseHudsonVersioning() {
             return this.versioning;
         }
+        */   
+        
         
         public String getProjectDir() {
         	return this.currentProjectDir;
@@ -400,7 +437,7 @@ public class XcodeBuilder extends Builder {
             return super.configure(req,formData);
         }
         
-        public void doAjax(StaplerRequest req, StaplerResponse rsp, @QueryParameter String projectDir) throws IOException, ServletException {
+        public void doAjaxTargets(StaplerRequest req, StaplerResponse rsp, @QueryParameter String projectDir) throws IOException, ServletException {
         	this.currentProjectDir = projectDir;
         	req.getView(this,"/com/sic/bb/xcodeplugin/XcodeBuilder/targets.jelly").forward(req, rsp);
         }
