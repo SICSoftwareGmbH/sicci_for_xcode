@@ -1,28 +1,17 @@
-
 package com.sic.bb.xcodeplugin;
 
 import hudson.EnvVars;
+import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Extension;
-import hudson.util.FormValidation;
-import hudson.util.StreamTaskListener;
-import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
-import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerResponse;
-
-
-import javax.servlet.ServletException;
+import hudson.tasks.Builder;
+import hudson.util.FormValidation;
+import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -39,6 +28,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import javax.servlet.ServletException;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
 
 public class XcodeBuilder extends Builder {
     private final Map<String,String> data;
@@ -294,7 +293,7 @@ public class XcodeBuilder extends Builder {
         private boolean xcodeClean, xcodeCleanGlobal;
         private boolean cleanBeforeBuild, cleanBeforeBuildGlobal;
         private boolean createIpa, createIpaGlobal;
-        private boolean versioning;
+        //private boolean versioning;
         
         public DescriptorImpl() {
         	super();
@@ -382,7 +381,6 @@ public class XcodeBuilder extends Builder {
             return this.versioning;
         }
         */   
-        
         
         public String getProjectDir() {
         	return this.currentProjectDir;
