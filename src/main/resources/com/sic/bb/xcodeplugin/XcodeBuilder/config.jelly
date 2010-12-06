@@ -11,15 +11,15 @@
 		<!-- something is missing -->
 	
 		<j:when test="${it.getScm().getClass() == 'class hudson.scm.NullSCM'}">
-			<div style="margin:10px 0 10px 20px;">
+			<xb:singleEntry mainStyle="padding:20px 0 0 10;">
 				<span style="font-weight:bold;">${%Warning: please configure a SCM first, save and poll the SCM, via starting a build}</span>
-			</div>
+			</xb:singleEntry>
 		</j:when>
 		
 		<j:when test="${!it.getSomeWorkspace().exists()}">
-			<div style="margin:10px 0 10px 20px;">
+			<xb:singleEntry mainStyle="padding:20px 0 0 10px;">
 				<span style="font-weight:bold;">${%Warning: you've to poll SCM first, via starting a build}</span>
-			</div>
+			</xb:singleEntry>
 		</j:when>
 		
 		
