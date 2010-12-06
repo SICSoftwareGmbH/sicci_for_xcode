@@ -40,6 +40,9 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
 public class XcodeBuilder extends Builder {
+	private final static int BUILD_OK = 0;
+	private final static int BUILD_ERROR = 1;
+	
     private final Map<String,String> data;
 
     @DataBoundConstructor
@@ -158,14 +161,27 @@ public class XcodeBuilder extends Builder {
 			}
 			
 			
+			ArrayList<String> blackList =  new ArrayList<String>();
+			
 			// build
-			for(String toBuild: getToPerformStep("build"))
-				returnCodes.add(launcher.launch().envs(envs).stdout(listener).pwd(workspace).
-						cmds(createCmds(xcodebuild,toBuild,"build")).join());
+			for(String toBuild: getToPerformStep("build")) {
+				int rcode = launcher.launch().envs(envs).stdout(listener).pwd(workspace).
+						cmds(createCmds(xcodebuild,toBuild,"build")).join();
+				
+				if(rcode != BUILD_OK)
+					blackList.add(toBuild);
+				
+				returnCodes.add(rcode);
+			}
 			
 			
 			// create ipa
 			for(String toCreateIPA: getToPerformStep("ipa")) {
+				if(blackList.contains(toCreateIPA)) {
+					returnCodes.add(BUILD_ERROR);
+					continue;
+				}
+					
 				FilePath buildDir = workspace.child("build");
 				String[] array = toCreateIPA.split("\\|");
 				
@@ -174,7 +190,7 @@ public class XcodeBuilder extends Builder {
 				else if(buildDir.child(array[1] + "-iphoneos").isDirectory())
 					buildDir = buildDir.child(array[1] + "-iphoneos");
 				else {
-					returnCodes.add(1);
+					returnCodes.add(BUILD_ERROR);
 					continue;
 				}
 				
@@ -183,8 +199,7 @@ public class XcodeBuilder extends Builder {
 	            for(FilePath app: apps) {
 	            	if(!app.getBaseName().equals(array[0]))
 	            		continue;
-	            	
-	            	
+	            	            	
 	            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
 	                
 	                if(ipa.exists())
@@ -205,7 +220,7 @@ public class XcodeBuilder extends Builder {
 			}
 			
 			// check for failed build
-			if(returnCodes.contains(1))
+			if(returnCodes.contains(BUILD_ERROR))
 				return false;
 			else
 				return true;
@@ -234,7 +249,7 @@ public class XcodeBuilder extends Builder {
 			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || !this.data.get(key).equals("true")))
 				continue;
 			
-			toPerformStep.add(new String(fields[0] + "|" + fields[1]));
+			toPerformStep.add(fields[0] + "|" + fields[1]);
 		}
     	
     	return toPerformStep;
