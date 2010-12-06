@@ -1,0 +1,61 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">
+
+	<div id="targets">
+		<j:set var="descriptor" value="${it}" />
+	
+		<table style="margin-left:40px" width="100%">
+		<j:forEach items="${descriptor.getBuildTargets(descriptor.getProjectDir())}" var="target">
+			<f:optionalBlock title="${target}" checked="false">
+				<f:nested>
+				<table width="100%">
+				<div style="margin:5px 0px 5px 0px">
+					<span style="font-weight:bold;">${%Build Configurations}:</span>
+				</div>
+				
+				<j:forEach items="${descriptor.getBuildConfigurations(descriptor.getProjectDir())}" var="config">
+					<f:optionalBlock title="${config}" checked="false">
+						<f:nested>
+						<table>
+							<j:choose>
+								<j:when test="${!descriptor.getCleanBeforeBuild()}">
+									<f:entry title="${%clean before build:}">
+										<f:checkbox field="${target}|${config}|clean" checked="false" />
+									</f:entry>
+								</j:when>
+								<j:otherwise>
+									<input type="hidden" name="${target}|${config}|clean" value="true" />
+								</j:otherwise>
+							</j:choose>
+							<j:choose>
+								<j:when test="${!descriptor.getCreateIpa()}">
+									<f:entry title="${%create IPA:}">
+										<f:checkbox field="${target}|${config}|ipa" checked="false" />
+									</f:entry>
+								</j:when>
+								<j:otherwise>
+									<input type="hidden" name="${target}|${config}|ipa" value="true" />
+								</j:otherwise>
+							</j:choose>
+							<!--
+							<j:choose>
+								<j:when test="${!descriptor.getUseHudsonVersioning()}">
+									<f:entry title="${%use Hudson versioning:}">
+										<f:checkbox field="${target}|${config}|versioning" checked="false" />
+									</f:entry>
+								</j:when>
+								<j:otherwise>
+									<input type="hidden" name="${target}|${config}|versioning" value="true" />
+								</j:otherwise>
+							</j:choose>
+							-->
+						</table>
+						</f:nested>
+					</f:optionalBlock>
+				</j:forEach>
+				</table>
+				</f:nested>
+			</f:optionalBlock>
+		</j:forEach>
+		</table>
+	</div>
+</j:jelly>
