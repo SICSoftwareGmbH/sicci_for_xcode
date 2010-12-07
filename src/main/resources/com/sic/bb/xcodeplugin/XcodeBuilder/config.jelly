@@ -33,27 +33,35 @@
 													'${workspace}/' + ProjectDir.options[ProjectDir.selectedIndex].value)">
 				
 				<j:set var="loop" value="0" />
+				<j:set var="currentProjectDir" value="${builder.getProjectDir()}" />
+				
 				<j:forEach items="${descriptor.getProjectDirs(workspace)}" var="projectDir">
 					<j:choose>
-						<j:when test="${empty(projectDir)}">
+						<j:when test="${empty(projectDir) and !empty(currentProjectDir)}">
 							<option value="">${%project root dir}</option>
+							<j:set var="loop" value="1" />
 						</j:when>
-						<j:when test="${builder.getProjectDir() != projectDir}">
+						<j:when test="${empty(projectDir) and empty(currentProjectDir)}">
+							<option value="" selected="selected">${%project root dir}</option>
+							<j:set var="loop" value="1" />
+						</j:when>
+						<j:when test="${currentProjectDir != projectDir}">
 							<option value="${projectDir}">${projectDir}</option>
 							
-							<j:if test="${builder == descriptor and loop == 0}">
+							<j:if test="${loop == 0 and (builder == descriptor or empty(currentProjectDir))}">
 								<j:set scope="parent" var="workspace" value="${workspace + '/' + projectDir}" />
 								<j:set var="loop" value="1" />
 							</j:if>
 						</j:when>
 						<j:otherwise>
 							<option value="${projectDir}" selected="selected">${projectDir}</option>
+							<j:set var="loop" value="1" />
 						</j:otherwise>
 					</j:choose>
 				</j:forEach>
 				</select>
 			</xb:singleEntry>
-					
+			
 			<j:set scope="parent" var="workspace" value="${workspace}" />
 			
 			<xb:singleEntry title="${%IPA filename}" help="help-ipafilename.html" titleStyle="vertical-align:middle; padding:4px 0 0 14px;" mainStyle="padding:4px 0 0 5px;" helpStyle="padding:4px 0 0 0;">
@@ -90,9 +98,8 @@
 				
 				<!-- Targets/Buildconfigurations -->
 			
-					<div id="targets">
-					
-					<table style="width:100%; padding:0 0 0 20px;">
+					<div id="targets">			
+					<table style="width:100%; padding:0 0 0 20px;">					
 					<j:forEach items="${builder.getBuildTargets(workspace)}" var="target">
 						<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(target)}">
 							<td>
