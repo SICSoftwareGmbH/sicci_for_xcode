@@ -113,6 +113,14 @@ public class XcodeBuilder extends Builder {
         return (DescriptorImpl) super.getDescriptor();
     }
     
+    /*
+    @Override
+    public boolean prebuild(AbstractBuild<?,?> build, BuildListener listener) {
+    	listener.getLogger().println("FAILED PREBUILD");
+    	return false;
+    }
+    */
+    
     @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println("Xcodebuilder: started");
@@ -273,7 +281,6 @@ public class XcodeBuilder extends Builder {
     	String ipaFileName = getIpaFilename();
     	Date buildTimeStamp = build.getTimestamp().getTime();
     	
-    	//ipaFileName = ipaFileName.replaceAll("<USER>", "");
     	ipaFileName = ipaFileName.replaceAll("<SECOND>",new SimpleDateFormat("ss").format(buildTimeStamp));
     	ipaFileName = ipaFileName.replaceAll("<MINUTE>",new SimpleDateFormat("mm").format(buildTimeStamp));
     	ipaFileName = ipaFileName.replaceAll("<HOUR>",new SimpleDateFormat("HH").format(buildTimeStamp));
