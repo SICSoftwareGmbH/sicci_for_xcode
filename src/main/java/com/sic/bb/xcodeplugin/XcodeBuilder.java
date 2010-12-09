@@ -71,6 +71,13 @@ public class XcodeBuilder extends Builder {
     	return this.data.get("XcodeClean").equals("true");
     }
     
+    public int getXcodeProjSearchDepth() {
+    	if(!this.data.containsKey("XcodeProjSearchDepth"))
+    		return -1;
+    	
+    	return Integer.parseInt(this.data.get("XcodeProjSearchDepth"));
+    }
+    
     public boolean getBooleanPreference(String key) {
     	if(!this.data.containsKey(key))
     		return false;
@@ -306,13 +313,14 @@ public class XcodeBuilder extends Builder {
         
         private static final String DisplayName = "Xcode build";
         
-    	private final int xcodeProjSearchDepth = 10;
-        
     	private String currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
     	
-    	private String xcodebuild, ipaFilename;
+    	private String xcodebuild;
+    	private String ipaFilename;
         private boolean ipaFilenameGlobal;
         private boolean xcodeClean, xcodeCleanGlobal;
+        private int xcodeProjSearchDepth;
+        private boolean xcodeProjSearchDepthGlobal;
         private boolean cleanBeforeBuild, cleanBeforeBuildGlobal;
         private boolean createIpa, createIpaGlobal;
         //private boolean versioning;
@@ -330,48 +338,64 @@ public class XcodeBuilder extends Builder {
         	this.xcodebuild = xcodebuild;
         }
         
-        public void setXcodeClean(boolean clean) {
-        	this.xcodeClean = clean;
+        public void setXcodeClean(boolean xcodeClean) {
+        	this.xcodeClean = xcodeClean;
         }
         
         public boolean getXcodeClean() {
             return this.xcodeClean;
         }
 
-        public void setXcodeCleanGlobal(boolean clean) {
-        	this.xcodeCleanGlobal = clean;
+        public void setXcodeCleanGlobal(boolean xcodeCleanGlobal) {
+        	this.xcodeCleanGlobal = xcodeCleanGlobal;
         }
         
         public boolean getXcodeCleanGlobal() {
         	return this.xcodeCleanGlobal;
         }
         
-        public void setCleanBeforeBuild(boolean clean) {
-        	this.cleanBeforeBuild = clean;
+        public void setXcodeProjSearchDepth(String searchDepth) {
+        	this.xcodeProjSearchDepth = Integer.parseInt(searchDepth);
+        }
+        
+        public String getXcodeProjSearchDepth() {
+        	return String.valueOf(this.xcodeProjSearchDepth);
+        }
+        
+        public void setXcodeProjSearchDepthGlobal(boolean searchDepthGlobal) {
+        	this.xcodeProjSearchDepthGlobal = searchDepthGlobal;
+        }
+        
+        public boolean getXcodeProjSearchDepthGlobal() {
+        	return this.xcodeProjSearchDepthGlobal;
+        }
+        
+        public void setCleanBeforeBuild(boolean cleanBeforeBuild) {
+        	this.cleanBeforeBuild = cleanBeforeBuild;
         }
         
         public boolean getCleanBeforeBuild() {
             return this.cleanBeforeBuild;
         }
         
-        public void setCleanBeforeBuildGlobal(boolean clean) {
-        	this.cleanBeforeBuildGlobal = clean;
+        public void setCleanBeforeBuildGlobal(boolean cleanBeforeBuildGlobal) {
+        	this.cleanBeforeBuildGlobal = cleanBeforeBuildGlobal;
         }
         
         public boolean getCleanBeforeBuildGlobal() {
             return this.cleanBeforeBuildGlobal;
         }
         
-        public void setCreateIpa(boolean ipa) {
-        	this.createIpa = ipa;
+        public void setCreateIpa(boolean createIpa) {
+        	this.createIpa = createIpa;
         }
         
         public boolean getCreateIpa() {
             return this.createIpa;
         }
         
-        public void setCreateIpaGlobal(boolean ipa) {
-        	this.createIpaGlobal = ipa;
+        public void setCreateIpaGlobal(boolean createIpaGlobal) {
+        	this.createIpaGlobal = createIpaGlobal;
         }
         
         public boolean getCreateIpaGlobal() {
@@ -395,8 +419,8 @@ public class XcodeBuilder extends Builder {
         }
         
         /*
-        public void setUseHudsonVersioning(boolean versioning) {
-        	this.versioning = versioning;
+        public void setUseHudsonVersioning(boolean hudsonVersioning) {
+        	this.versioning = hudsonVersioning;
         }
         
         public boolean getUseHudsonVersioning() {
@@ -469,6 +493,33 @@ public class XcodeBuilder extends Builder {
             if(!value.contains("xcodebuild"))
             	return FormValidation.warningWithMarkup("xcodebuild should be the cli command");
             
+            return FormValidation.ok();
+        }
+        
+        public FormValidation doCheckXcodeProjSearchDepth(@QueryParameter String value) throws IOException, ServletException {
+        	if(value.isEmpty())
+        		return FormValidation.error("insert max xcode project search depth (min 1, max 100)");
+        	
+        	int xcodeProjSearchDepth;
+        	
+        	try {
+        		xcodeProjSearchDepth = Integer.parseInt(value);
+        	} catch(NumberFormatException e) {
+        		return FormValidation.error("value is not a number");
+        	}
+ 
+        	if(xcodeProjSearchDepth < 1)
+        		return FormValidation.error("value is to small (min 1)");
+        	else if(xcodeProjSearchDepth > 100)
+        		return FormValidation.error("value is to big (max 100)");
+        	
+            return FormValidation.ok();
+        }
+        
+        public FormValidation doCheckIpaFilename(@QueryParameter String value) throws IOException, ServletException {
+        	if(value.isEmpty())
+        		return FormValidation.error("please set a default IPA filename ");
+        	
             return FormValidation.ok();
         }
 

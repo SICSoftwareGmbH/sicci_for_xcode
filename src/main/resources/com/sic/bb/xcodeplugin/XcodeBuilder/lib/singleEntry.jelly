@@ -1,4 +1,5 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">	
+	<j:set var="entry" value="${attrs}" />
 	<tr>
 		<j:if test="${attrs.noLeftSpace == null}">
 			<td class="setting-leftspace"><st:nbsp /></td>
@@ -12,6 +13,18 @@
 				<a href="#" class="help-button" helpURL="${rootURL}/plugin/XcodeBuilder/${attrs.help}"><img src="${imagesURL}/16x16/help.gif" alt="Help for feature: ${title}" /></a>
 			</j:if>
 		</td>
-		<f:helpArea />
 	</tr>
+	<tr class="validation-error-area">
+		<td style="padding:0px;" colspan="2" />
+		<td style="padding:0 0 0 5px;" />
+	</tr>
+  	<j:if test="${attrs.help != null}">
+	  	<tr class="help-area">
+	    	<td/>
+	    	<td colspan="2" style="${attrs.helpAreaStyle}">
+	     		<div class="help">${%Loading...}</div>
+	    	</td>
+	    	<td/>
+	  	</tr>
+	</j:if>
 </j:jelly>

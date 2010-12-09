@@ -26,7 +26,7 @@
 		<!-- everything is ok -->
 		
 		<j:otherwise>
-			<xb:singleEntry title="${%Project directory}" help="help-projectdir.html" titleStyle="vertical-align:middle; padding:15px 0 0 14px;" mainStyle="padding:15px 0 0 5px;" helpStyle="padding:15px 0 0 0">
+			<xb:singleEntry title="${%Project directory}" help="help-projectdir.html" titleStyle="vertical-align:middle; padding:15px 0 0 14px;" mainStyle="padding:15px 0 0 5px;" helpStyle="padding:15px 0 0 0" helpAreaStyle="padding:0 0 0 14px;">
 				<select name="ProjectDir" field="ProjectDir" 
 						onChange="refreshTargets(	'targets',
 													'${rootURL}/builder/XcodeBuilder/ajaxTargets',
@@ -64,7 +64,7 @@
 			
 			<j:set scope="parent" var="workspace" value="${workspace}" />
 			
-			<xb:singleEntry title="${%IPA filename}" help="help-ipafilename.html" titleStyle="vertical-align:middle; padding:4px 0 0 14px;" mainStyle="padding:4px 0 0 5px;" helpStyle="padding:4px 0 0 0;">
+			<xb:singleEntry title="${%IPA filename}" help="help-ipafilename.html" titleStyle="vertical-align:middle; padding:4px 0 0 14px;" mainStyle="padding:4px 0 0 5px;" helpStyle="padding:4px 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getIpaFilenameGlobal()}">
 					<input name="IpaFilename" type="text" value="${descriptor.getIpaFilename()}" disabled="disabled" style="width:100%;"/>
@@ -75,7 +75,7 @@
 			</j:choose>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%use Xcode for cleanup}" help="help-xcodeclean.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;">
+			<xb:singleEntry title="${%use Xcode for cleanup}" help="help-xcodeclean.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;"  helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getXcodeCleanGlobal()}">
 					<input name="XcodeClean" type="checkbox" checked="${descriptor.getXcodeClean()}" disabled="disabled" />
