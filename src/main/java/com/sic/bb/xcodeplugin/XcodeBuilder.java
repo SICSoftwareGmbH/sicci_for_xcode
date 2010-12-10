@@ -42,6 +42,7 @@ import org.kohsuke.stapler.StaplerResponse;
 public class XcodeBuilder extends Builder {
 	private final static int BUILD_OK = 0;
 	private final static int BUILD_ERROR = 1;
+	private final static String DEFAULT_IPAFILENAME = "<TARGET>_<CONFIG>_b<BUILD>_<DATETIME>";
 	
     private final Map<String,String> data;
 
@@ -286,6 +287,10 @@ public class XcodeBuilder extends Builder {
     
     private String createIPAFilename(AbstractBuild<?,?> build, String targetName, String configName) {
     	String ipaFileName = getIpaFilename();
+    	
+    	if(ipaFileName.isEmpty())
+    		ipaFileName = DEFAULT_IPAFILENAME;
+    	
     	Date buildTimeStamp = build.getTimestamp().getTime();
     	
     	ipaFileName = ipaFileName.replaceAll("<SECOND>",new SimpleDateFormat("ss").format(buildTimeStamp));
