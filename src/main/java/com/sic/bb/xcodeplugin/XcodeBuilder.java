@@ -547,7 +547,7 @@ public class XcodeBuilder extends Builder {
         private ArrayList<String> searchXcodeProjFiles(String workspace, int depth) {
         	ArrayList<String> projectDirs = new ArrayList<String>();
         	
-        	if(depth == 0)
+        	if(depth <= 0)
         		return projectDirs;
         	
         	FilePath dir = new FilePath(new File(workspace));
