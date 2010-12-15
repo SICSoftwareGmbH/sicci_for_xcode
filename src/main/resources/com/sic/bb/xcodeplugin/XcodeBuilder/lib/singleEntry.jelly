@@ -1,9 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">	
 	<j:set var="entry" value="${attrs}" />
 	<tr>
-		<j:if test="${attrs.noLeftSpace == null}">
-			<td class="setting-leftspace"><st:nbsp /></td>
-		</j:if>
+		<td class="setting-leftspace"><st:nbsp /></td>
 		<td class="setting-name" style="${attrs.style}${attrs.titleStyle}">${attrs.title}</td>
 		<td class="setting-main" style="${attrs.style}${attrs.mainStyle}">
 			<d:invokeBody />

@@ -21,8 +21,8 @@
 					
 					<f:optionalBlock title="${config}" checked="${subMenuUsed}">
 						<td>
-						<table style="width:100%; padding:5px 0 0 21px;">
-							<xb:singleEntry title="${%clean before build:}" noLeftSpace="true" titleStyle="vertical-align:middle;">
+						<table style="width:100%; padding:5px 0 0 13px;">
+							<xb:singleEntry title="${%clean before build:}" help="help-cleanbeforebuild.html" titleStyle="vertical-align:middle;">
 							<j:choose>
 								<j:when test="${descriptor.getCleanBeforeBuildGlobal()}">
 									<input type="checkbox" name="${target}|${config}|clean" checked="${descriptor.getCleanBeforeBuild() ? 'true' : null}" disabled="disabled" />
@@ -40,7 +40,7 @@
 							</j:choose>
 							</xb:singleEntry>
 							
-							<xb:singleEntry title="${%create IPA:}" noLeftSpace="true" titleStyle="vertical-align:middle;">
+							<xb:singleEntry title="${%create IPA:}" help="help-createipa.html" titleStyle="vertical-align:middle;">
 							<j:choose>
 								<j:when test="${descriptor.getCreateIpaGlobal()}">
 									<input type="checkbox" name="${target}|${config}|ipa" checked="${descriptor.getCreateIpa() ? 'true' : null}" disabled="disabled" />
@@ -58,9 +58,9 @@
 							</j:choose>
 							</xb:singleEntry>
 							
-							<!-- not used atm
+							<!--
 							
-							<xb:singleEntry title="${%use Hudson versioning:}" noLeftSpace="true" titleStyle="vertical-align:middle;">
+							<xb:singleEntry title="${%use Hudson versioning:}" help="help-usehudsonversioning.html" titleStyle="vertical-align:middle;">
 							<j:choose>
 								<j:when test="${descriptor.getUseHudsonVersioningGlobal()}">
 									<input type="checkbox" name="${target}|${config}|versioning" checked="${descriptor.getUseHudsonVersioning() ? 'true' : null}" disabled="disabled" />
