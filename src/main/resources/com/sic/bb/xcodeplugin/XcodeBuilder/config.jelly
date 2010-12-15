@@ -72,7 +72,7 @@
 			<xb:singleEntry title="${%use Xcode for cleanup}" help="help-xcodeclean.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;"  helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getXcodeCleanGlobal()}">
-					<input name="XcodeClean" type="checkbox" checked="${descriptor.getXcodeClean()}" disabled="disabled" />
+					<input name="XcodeClean" type="checkbox" checked="${descriptor.getXcodeClean() ? 'true' : null}" disabled="disabled" />
 				</j:when>
 				<j:otherwise>
 					<f:checkbox field="XcodeClean" default="${descriptor.getXcodeClean()}" />
