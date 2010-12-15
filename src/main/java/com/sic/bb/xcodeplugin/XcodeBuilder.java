@@ -223,14 +223,18 @@ public class XcodeBuilder extends Builder {
 
 	                FilePath payload = buildDir.child("Payload");
 	                
-	                if(payload.exists()) {
+	                if(payload.exists())
 	                	payload.deleteRecursive();
-	                	payload.mkdirs();
-	                }
 
 	                app.copyRecursiveTo(payload.child(app.getName()));
+	                
+	                //payload.mkdirs();
+	                //app.renameTo(payload.child(app.getName()));
+	                
 	                payload.zip(ipa.write());
-
+	                
+	                //payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
+	                
 	                payload.deleteRecursive();
 	            }
 			}
