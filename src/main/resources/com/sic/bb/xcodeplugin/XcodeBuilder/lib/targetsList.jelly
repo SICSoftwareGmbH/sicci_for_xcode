@@ -89,5 +89,6 @@
 		</f:optionalBlock>
 	</j:forEach>
 	</table>
-	</div>	
+	</div>
+	
 </j:jelly>
