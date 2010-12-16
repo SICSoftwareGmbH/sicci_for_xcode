@@ -6,8 +6,8 @@
 
 	<!-- Targets/Buildconfigurations -->
 			
-	<div id="targets">			
-	<table style="width:100%; padding:0 0 0 20px;">					
+	<div id="targets">
+	<table style="width:100%; padding:0 0 0 20px;">
 	<j:forEach items="${builder.getBuildTargets(projectDir)}" var="target">
 		<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(target)}">
 			<td>
