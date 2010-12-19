@@ -8,7 +8,7 @@
 	
 		<j:when test="${it.getScm().getClass() == 'class hudson.scm.NullSCM'}">
 			<xb:singleEntry mainStyle="padding:20px 0 0 10;">
-				<span style="font-weight:bold;">${%Warning: please configure a SCM first, save and poll the SCM, via starting a build}</span>
+				<span style="font-weight:bold;">${%Warning: please configure a SCM, save and check the SCM out, via starting a build}</span>
 			</xb:singleEntry>
 		</j:when>
 		

@@ -571,10 +571,10 @@ public class XcodeBuilder extends Builder {
 				}
 			} catch (IOException e) {
 				// TODO
-				projectDirs.add("IOException: " + e.getMessage());
+				//projectDirs.add("IOException: " + e.getMessage());
 			} catch (InterruptedException e) {
 				// TODO
-				projectDirs.add("InterruptedException: " + e.getMessage());
+				//projectDirs.add("InterruptedException: " + e.getMessage());
 			}
 			
 			return projectDirs;
