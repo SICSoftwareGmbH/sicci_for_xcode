@@ -42,6 +42,9 @@ import org.kohsuke.stapler.StaplerResponse;
 public class XcodeBuilder extends Builder {
 	private final static int BUILD_OK = 0;
 	private final static int BUILD_ERROR = 1;
+	private final static int MIN_XCODE_PROJ_SEARCH_DEPTH = 1;
+	private final static int MAX_XCODE_PROJ_SEARCH_DEPTH = 99;
+	private final static int DEFAULT_XCODE_PROJ_SEARCH_DEPTH = 10;
 	private final static String DEFAULT_IPAFILENAME = "<TARGET>_<CONFIG>_b<BUILD>_<DATETIME>";
 	
     private final Map<String,String> data;
@@ -72,11 +75,11 @@ public class XcodeBuilder extends Builder {
     	return this.data.get("XcodeClean").equals("true");
     }
     
-    public int getXcodeProjSearchDepth() {
+    public String getXcodeProjSearchDepth() {
     	if(!this.data.containsKey("XcodeProjSearchDepth"))
-    		return -1;
+    		return null;
     	
-    	return Integer.parseInt(this.data.get("XcodeProjSearchDepth"));
+    	return this.data.get("XcodeProjSearchDepth");
     }
     
     public boolean getBooleanPreference(String key) {
@@ -93,6 +96,21 @@ public class XcodeBuilder extends Builder {
     	}
     	
     	return false;
+    }
+    
+    public String[] getProjectDirs(String workspace) {
+    	int searchDepth = -1;
+    	
+    	try {
+    		searchDepth = Integer.parseInt(getXcodeProjSearchDepth());
+    	} catch(NumberFormatException e) {
+    		// TODO
+    	}
+    	
+    	if(searchDepth < MIN_XCODE_PROJ_SEARCH_DEPTH || searchDepth > MAX_XCODE_PROJ_SEARCH_DEPTH)
+    		return getDescriptor().getProjectDirs(workspace);
+    	else
+    		return getDescriptor().getProjectDirs(workspace,searchDepth);
     }
     
     public String[] availableSdks(String workspace) {
@@ -363,8 +381,16 @@ public class XcodeBuilder extends Builder {
         	return this.xcodeCleanGlobal;
         }
         
-        public void setXcodeProjSearchDepth(String searchDepth) {
-        	this.xcodeProjSearchDepth = Integer.parseInt(searchDepth);
+        public void setXcodeProjSearchDepth(String searchDepth) {        	
+        	try {
+        		this.xcodeProjSearchDepth = Integer.parseInt(searchDepth);
+        		
+        		if(this.xcodeProjSearchDepth > XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH ||
+        				this.xcodeProjSearchDepth < XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
+        			this.xcodeProjSearchDepth = XcodeBuilder.DEFAULT_XCODE_PROJ_SEARCH_DEPTH;
+        	} catch(NumberFormatException e) {
+        		this.xcodeProjSearchDepth = XcodeBuilder.DEFAULT_XCODE_PROJ_SEARCH_DEPTH;
+        	}
         }
         
         public String getXcodeProjSearchDepth() {
@@ -507,7 +533,8 @@ public class XcodeBuilder extends Builder {
         
         public FormValidation doCheckXcodeProjSearchDepth(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
-        		return FormValidation.error("insert max xcode project search depth (min 1, max 100)");
+        		return FormValidation.error("insert max xcode project search depth (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH +
+        				", max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ")");
         	
         	int xcodeProjSearchDepth;
         	
@@ -517,10 +544,10 @@ public class XcodeBuilder extends Builder {
         		return FormValidation.error("value is not a number");
         	}
  
-        	if(xcodeProjSearchDepth < 1)
-        		return FormValidation.error("value is to small (min 1)");
-        	else if(xcodeProjSearchDepth > 100)
-        		return FormValidation.error("value is to big (max 100)");
+        	if(xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH)
+        		return FormValidation.error("value is to small (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH + ")");
+        	else if(xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
+        		return FormValidation.error("value is to big (max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ")");
         	
             return FormValidation.ok();
         }
@@ -541,7 +568,15 @@ public class XcodeBuilder extends Builder {
         }
         
         public String[] getProjectDirs(String workspace) {
-        	ArrayList<String> projectDirs = searchXcodeProjFiles(workspace, this.xcodeProjSearchDepth);
+        	if(this.xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH 
+        			|| this.xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
+        		return getProjectDirs(workspace, XcodeBuilder.DEFAULT_XCODE_PROJ_SEARCH_DEPTH);
+        		
+        	return getProjectDirs(workspace, this.xcodeProjSearchDepth);
+        }
+        
+        public String[] getProjectDirs(String workspace, int searchDepth) {
+        	ArrayList<String> projectDirs = searchXcodeProjFiles(workspace, searchDepth);
         	String[] projectDirsArray = new String[projectDirs.size()];
         	
         	for(int i = 0; i < projectDirs.size(); i++) {
@@ -553,10 +588,10 @@ public class XcodeBuilder extends Builder {
         	return projectDirsArray;
         }
         
-        private ArrayList<String> searchXcodeProjFiles(String workspace, int depth) {
+        private ArrayList<String> searchXcodeProjFiles(String workspace, int searchDepth) {
         	ArrayList<String> projectDirs = new ArrayList<String>();
         	
-        	if(depth <= 0)
+        	if(searchDepth <= 0)
         		return projectDirs;
         	
         	FilePath dir = new FilePath(new File(workspace));
@@ -567,7 +602,7 @@ public class XcodeBuilder extends Builder {
         		
 				for(FilePath path : dir.listDirectories()) {
 					if(!projectDirs.contains(workspace + "/" + path.getName()))
-						projectDirs.addAll(searchXcodeProjFiles(workspace + "/" + path.getName(), depth - 1));
+						projectDirs.addAll(searchXcodeProjFiles(workspace + "/" + path.getName(), searchDepth - 1));
 				}
 			} catch (IOException e) {
 				// TODO
