@@ -385,8 +385,8 @@ public class XcodeBuilder extends Builder {
         	try {
         		this.xcodeProjSearchDepth = Integer.parseInt(searchDepth);
         		
-        		if(this.xcodeProjSearchDepth > XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH ||
-        				this.xcodeProjSearchDepth < XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
+        		if(this.xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH ||
+        				this.xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
         			this.xcodeProjSearchDepth = XcodeBuilder.DEFAULT_XCODE_PROJ_SEARCH_DEPTH;
         	} catch(NumberFormatException e) {
         		this.xcodeProjSearchDepth = XcodeBuilder.DEFAULT_XCODE_PROJ_SEARCH_DEPTH;
