@@ -99,7 +99,7 @@ public class XcodeBuilder extends Builder {
     }
     
     public String[] getProjectDirs(String workspace) {
-    	int searchDepth = -1;
+    	int searchDepth = MIN_XCODE_PROJ_SEARCH_DEPTH - 1;
     	
     	try {
     		searchDepth = Integer.parseInt(getXcodeProjSearchDepth());
@@ -180,14 +180,17 @@ public class XcodeBuilder extends Builder {
 			else {
 				for(String toClean: getToPerformStep("clean")) {
 					FilePath buildDir = workspace.child("build");
-					
 					String[] array = toClean.split("\\|");
 					
-					for(FilePath dir: buildDir.list(new BuildDirFilter())) {
-						dir = dir.child(array[1] + "-iphoneos").child(array[0] + ".build");
-						
-						if(dir.isDirectory())
-							dir.deleteRecursive();	
+					try {
+						for(FilePath dir: buildDir.list(new BuildDirFilter())) {
+							dir = dir.child(array[1] + "-iphoneos").child(array[0] + ".build");
+							
+							if(dir.isDirectory())
+								dir.deleteRecursive();
+						}
+					} catch(NullPointerException e) {
+						// TODO
 					}
 					
 					buildDir = buildDir.child(array[1] + "-iphoneos");
@@ -234,9 +237,7 @@ public class XcodeBuilder extends Builder {
 					continue;
 				}
 				
-				List<FilePath> apps = buildDir.list(new AppDirFilter());
-				
-	            for(FilePath app: apps) {
+	            for(FilePath app: buildDir.list(new AppDirFilter())) {
 	            	if(!app.getBaseName().equals(array[0]))
 	            		continue;
 	            	            	
@@ -603,8 +604,8 @@ public class XcodeBuilder extends Builder {
         	FilePath dir = new FilePath(new File(workspace));
         	
         	try {
-        		if(dir.list(new XcodeProjDirFilter()).size() != 0)
-        			projectDirs.add(workspace + "/");
+    			if(dir.list(new XcodeProjDirFilter()).size() != 0)
+    				projectDirs.add(workspace + "/");
         		
 				for(FilePath path : dir.listDirectories()) {
 					if(!projectDirs.contains(workspace + "/" + path.getName()))
