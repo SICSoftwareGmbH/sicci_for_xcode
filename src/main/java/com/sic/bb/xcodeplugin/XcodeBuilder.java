@@ -180,17 +180,23 @@ public class XcodeBuilder extends Builder {
 			else {
 				for(String toClean: getToPerformStep("clean")) {
 					FilePath buildDir = workspace.child("build");
+					
 					String[] array = toClean.split("\\|");
 					
-					if(buildDir.child(array[1]).isDirectory())
-						buildDir = buildDir.child(array[1]);
-					else if(buildDir.child(array[1] + "-iphoneos").isDirectory())
-						buildDir = buildDir.child(array[1] + "-iphoneos");
-					else
-						continue;
+					for(FilePath dir: buildDir.list(new BuildDirFilter())) {
+						dir = dir.child(array[1] + "-iphoneos").child(array[0] + ".build");
+						
+						if(dir.isDirectory())
+							dir.deleteRecursive();	
+					}
 					
-					for(FilePath dir: buildDir.listDirectories())
-						dir.deleteRecursive();
+					buildDir = buildDir.child(array[1] + "-iphoneos");
+					
+					if(buildDir.child(array[0] + ".app").isDirectory())
+						buildDir.child(array[0] + ".app").deleteRecursive();
+					
+					if(buildDir.child(array[0] + ".app.dSYM").isDirectory())
+						buildDir.child(array[0] + ".app.dSYM").deleteRecursive();
 				}
 			}
 			
@@ -228,7 +234,7 @@ public class XcodeBuilder extends Builder {
 					continue;
 				}
 				
-				List<FilePath> apps = buildDir.list(new APPFileFilter());
+				List<FilePath> apps = buildDir.list(new AppDirFilter());
 				
 	            for(FilePath app: apps) {
 	            	if(!app.getBaseName().equals(array[0]))
@@ -597,7 +603,7 @@ public class XcodeBuilder extends Builder {
         	FilePath dir = new FilePath(new File(workspace));
         	
         	try {
-        		if(dir.list(new XcodeProjFileFilter()).size() != 0)
+        		if(dir.list(new XcodeProjDirFilter()).size() != 0)
         			projectDirs.add(workspace + "/");
         		
 				for(FilePath path : dir.listDirectories()) {
@@ -682,7 +688,7 @@ public class XcodeBuilder extends Builder {
         }
         
         @SuppressWarnings("serial")
-    	private final class XcodeProjFileFilter implements FileFilter,Serializable {
+    	private final class XcodeProjDirFilter implements FileFilter,Serializable {
             public boolean accept(File pathname) {
                 return pathname.isDirectory() && pathname.getName().endsWith(".xcodeproj");
             }
@@ -690,24 +696,31 @@ public class XcodeBuilder extends Builder {
     }
     
     @SuppressWarnings("serial")
-	private final class APPFileFilter implements FileFilter,Serializable {
+	private final class AppDirFilter implements FileFilter,Serializable {
         public boolean accept(File pathname) {
             return pathname.isDirectory() && pathname.getName().endsWith(".app");
         }
     }
     
+    @SuppressWarnings("serial")
+	private final class BuildDirFilter implements FileFilter,Serializable {
+        public boolean accept(File pathname) {
+            return pathname.isDirectory() && pathname.getName().endsWith(".build");
+        }
+    }
+    
     /*
     @SuppressWarnings("serial")
-	private final class IPAFileFilter implements FileFilter,Serializable {
+	private final class DsymDirFilter implements FileFilter,Serializable {
         public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".ipa");
+            return pathname.isDirectory() && pathname.getName().endsWith(".app.dSYM");
         }
     }
     
     @SuppressWarnings("serial")
-	private final class DSYMFileFilter implements FileFilter,Serializable {
+	private final class IpaFileFilter implements FileFilter,Serializable {
         public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".app.dSYM");
+            return pathname.isDirectory() && pathname.getName().endsWith(".ipa");
         }
     }
     */
