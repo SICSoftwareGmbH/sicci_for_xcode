@@ -371,9 +371,9 @@ public class XcodeBuilder extends Builder {
     
     @Extension
     public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
-    	private static final Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
-        private static final Pattern parseXcodeBuildListPattern1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
-        private static final Pattern parseXcodeBuildListPattern2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
+    	private final static Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
+    	private final static Pattern parseXcodeBuildListPattern1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
+    	private final static Pattern parseXcodeBuildListPattern2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
         
     	private String currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
     	
@@ -712,12 +712,12 @@ public class XcodeBuilder extends Builder {
         	else
         		this.workspaceTemp = workspace + arg;
         	
-	    	FilePath file = new FilePath(new File(this.xcodebuild));
+	    	FilePath file = new FilePath(new File(getXcodebuild()));
 	    	ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 	    	
 	    	try {
 	    		Launcher launcher = file.createLauncher(new StreamTaskListener(new ByteArrayOutputStream()));
-	    		launcher.launch().stdout(stdout).pwd(workspace).cmds(this.xcodebuild, arg).join();
+	    		launcher.launch().stdout(stdout).pwd(workspace).cmds(getXcodebuild(), arg).join();
 			} catch (IOException e) {
 				// TODO
 				return "IOException: " + e.getMessage();
