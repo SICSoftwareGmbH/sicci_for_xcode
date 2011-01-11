@@ -47,7 +47,8 @@ public class XcodeBuilder extends Builder {
 	private final static int MIN_XCODE_PROJ_SEARCH_DEPTH = 1;
 	private final static int MAX_XCODE_PROJ_SEARCH_DEPTH = 99;
 	private final static int DEFAULT_XCODE_PROJ_SEARCH_DEPTH = 10;
-	private final static String DEFAULT_IPAFILENAMETEMPLATE = "<TARGET>_<CONFIG>_b<BUILD>_<DATETIME>";
+	private final static String DEFAULT_XCODEBUILD_PATH = "/usr/bin/xcodebuild";
+	private final static String DEFAULT_IPA_FILENAME_TEMPLATE = "<TARGET>_<CONFIG>_b<BUILD>_<DATETIME>";
 	
     private final Map<String,String> data;
 
@@ -93,7 +94,7 @@ public class XcodeBuilder extends Builder {
     
     public boolean subMenuUsed(String target) {
     	for(String key: (String[]) this.data.keySet().toArray(new String[this.data.size()])) {
-    		if(key.contains(target + "|"))
+    		if(key.contains(target + '|'))
     			return true;
     	}
     	
@@ -117,21 +118,21 @@ public class XcodeBuilder extends Builder {
     
     public String[] availableSdks(String workspace) {
     	if(getProjectDir() != null)
-    		return getDescriptor().availableSdks(workspace + "/" + getProjectDir());
+    		return getDescriptor().availableSdks(workspace + '/' + getProjectDir());
     	else
     		return getDescriptor().availableSdks(workspace);
     }
 
     public String[] getBuildConfigurations(String workspace) {
     	if(getProjectDir() != null)
-    		return getDescriptor().getBuildConfigurations(workspace + "/" + getProjectDir());
+    		return getDescriptor().getBuildConfigurations(workspace + '/' + getProjectDir());
     	else
     		return getDescriptor().getBuildConfigurations(workspace);
     }
     
     public String[] getBuildTargets(String workspace) {
     	if(getProjectDir() != null)
-    		return getDescriptor().getBuildTargets(workspace + "/" + getProjectDir());
+    		return getDescriptor().getBuildTargets(workspace + '/' + getProjectDir());
     	else
     		return getDescriptor().getBuildTargets(workspace);
     }
@@ -295,7 +296,7 @@ public class XcodeBuilder extends Builder {
 			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || !this.data.get(key).equals("true")))
 				continue;
 			
-			toPerformStep.add(fields[0] + "|" + fields[1]);
+			toPerformStep.add(fields[0] + '|' + fields[1]);
 		}
     	
     	return toPerformStep;
@@ -317,7 +318,7 @@ public class XcodeBuilder extends Builder {
     
     private static void zipDirectory(FilePath directory, String path, ZipArchiveOutputStream zipStream) {
     	if(path != null && !path.isEmpty())
-    		path += "/";
+    		path += '/';
     		
 		try {
 	    	ZipArchiveEntry zipEntry = new ZipArchiveEntry(new File(directory.toURI()),path + directory.getName());
@@ -347,7 +348,7 @@ public class XcodeBuilder extends Builder {
     	String ipaFilename = getIpaFilenameTemplate();
     	
     	if(ipaFilename.isEmpty())
-    		ipaFilename = DEFAULT_IPAFILENAMETEMPLATE;
+    		ipaFilename = DEFAULT_IPA_FILENAME_TEMPLATE;
     	
     	Date buildTimeStamp = build.getTimestamp().getTime();
     	
@@ -391,10 +392,16 @@ public class XcodeBuilder extends Builder {
         }
         
         public String getXcodebuild() {
+        	if(this.xcodebuild == null || this.xcodebuild.isEmpty())
+        		return XcodeBuilder.DEFAULT_XCODEBUILD_PATH;
+        	
             return this.xcodebuild;
         }
         
         public void setXcodebuild(String xcodebuild) {
+        	if(xcodebuild == null || xcodebuild.isEmpty())
+        		this.xcodebuild = XcodeBuilder.DEFAULT_XCODEBUILD_PATH;
+        	
         	this.xcodebuild = xcodebuild;
         }
         
@@ -427,6 +434,10 @@ public class XcodeBuilder extends Builder {
         }
         
         public String getXcodeProjSearchDepth() {
+    		if(this.xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH ||
+    				this.xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
+    			return String.valueOf(XcodeBuilder.DEFAULT_XCODE_PROJ_SEARCH_DEPTH);
+    		
         	return String.valueOf(this.xcodeProjSearchDepth);
         }
         
@@ -471,10 +482,16 @@ public class XcodeBuilder extends Builder {
         }
         
         public void setIpaFilenameTemplate(String ipaFilenameTemplate) {
+        	if(ipaFilenameTemplate == null || ipaFilenameTemplate.isEmpty())
+        		this.ipaFilenameTemplate = XcodeBuilder.DEFAULT_IPA_FILENAME_TEMPLATE;
+        	
         	this.ipaFilenameTemplate = ipaFilenameTemplate;
         }
         
         public String getIpaFilenameTemplate() {
+        	if(this.ipaFilenameTemplate == null || this.ipaFilenameTemplate.isEmpty())
+        		return XcodeBuilder.DEFAULT_IPA_FILENAME_TEMPLATE;
+        	
         	return this.ipaFilenameTemplate;
         }
         
@@ -482,7 +499,7 @@ public class XcodeBuilder extends Builder {
         	this.ipaFilenameTemplateGlobal = ipaFilenameTemplateGlobal;
         }
         
-        public boolean getIpaFilenameGlobal() {
+        public boolean getIpaFilenameTemplateGlobal() {
         	return this.ipaFilenameTemplateGlobal;
         } 
         
@@ -540,9 +557,7 @@ public class XcodeBuilder extends Builder {
         
         public void doAjaxTargets(StaplerRequest req, StaplerResponse rsp, @QueryParameter String projectDir) throws IOException, ServletException {
         	this.currentProjectDir = projectDir;
-        	String pack = "/" + XcodeBuilder.class.getPackage().getName() + "/";
-        	pack = pack.replaceAll("\\.", "\\/");
-        	req.getView(this,pack + "targets.jelly").forward(req, rsp);
+        	req.getView(this,'/' + XcodeBuilder.class.getName().replaceAll("\\.","\\/")  + "/targets.jelly").forward(req, rsp);
         }
         
         public FormValidation doCheckXcodebuild(@QueryParameter String value) throws IOException, ServletException {
@@ -567,7 +582,7 @@ public class XcodeBuilder extends Builder {
         public FormValidation doCheckXcodeProjSearchDepth(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
         		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_emptyValue() + " (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH +
-        				", max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ")");
+        				", max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ')');
         	
         	int xcodeProjSearchDepth;
         	
@@ -578,9 +593,9 @@ public class XcodeBuilder extends Builder {
         	}
  
         	if(xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH)
-        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueTooSmall() + " (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH + ")");
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueTooSmall() + " (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH + ')');
         	else if(xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
-        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueTooBig() + " (max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ")");
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueTooBig() + " (max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ')');
         	
             return FormValidation.ok();
         }
@@ -600,6 +615,7 @@ public class XcodeBuilder extends Builder {
             return false;
         }
         
+
         public String[] getProjectDirs(String workspace) {
         	if(this.xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH 
         			|| this.xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
@@ -607,6 +623,7 @@ public class XcodeBuilder extends Builder {
         		
         	return getProjectDirs(workspace, this.xcodeProjSearchDepth);
         }
+        
         
         public String[] getProjectDirs(String workspace, int searchDepth) {
         	ArrayList<String> projectDirs = searchXcodeProjFiles(workspace, searchDepth);
@@ -631,11 +648,11 @@ public class XcodeBuilder extends Builder {
         	
         	try {
     			if(dir.list(new XcodeProjDirFilter()).size() != 0)
-    				projectDirs.add(workspace + "/");
+    				projectDirs.add(workspace + '/');
         		
 				for(FilePath path : dir.listDirectories()) {
-					if(!projectDirs.contains(workspace + "/" + path.getName()))
-						projectDirs.addAll(searchXcodeProjFiles(workspace + "/" + path.getName(), searchDepth - 1));
+					if(!projectDirs.contains(workspace + '/' + path.getName()))
+						projectDirs.addAll(searchXcodeProjFiles(workspace + '/' + path.getName(), searchDepth - 1));
 				}
 			} catch (IOException e) {
 				// TODO
