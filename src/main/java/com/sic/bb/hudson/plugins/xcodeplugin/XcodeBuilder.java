@@ -347,7 +347,7 @@ public class XcodeBuilder extends Builder {
     private String createIPAFilename(AbstractBuild<?,?> build, String targetName, String configName) {
     	String ipaFilename = getIpaFilenameTemplate();
     	
-    	if(ipaFilename.isEmpty())
+    	if(ipaFilename == null || ipaFilename.isEmpty())
     		ipaFilename = DEFAULT_IPA_FILENAME_TEMPLATE;
     	
     	Date buildTimeStamp = build.getTimestamp().getTime();
