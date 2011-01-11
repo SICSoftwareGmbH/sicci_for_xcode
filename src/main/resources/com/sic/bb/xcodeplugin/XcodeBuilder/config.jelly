@@ -8,13 +8,13 @@
 	
 		<j:when test="${it.getScm().getClass() == 'class hudson.scm.NullSCM'}">
 			<xb:singleEntry mainStyle="padding:20px 0 0 10;">
-				<span style="font-weight:bold;">${%Warning: please configure a SCM, save and check the SCM out, via starting a build}</span>
+				<span style="font-weight:bold;">${%configure scm}</span>
 			</xb:singleEntry>
 		</j:when>
 		
 		<j:when test="${!it.getSomeWorkspace().exists()}">
 			<xb:singleEntry mainStyle="padding:20px 0 0 10px;">
-				<span style="font-weight:bold;">${%Warning: you've to poll SCM first, via starting a build}</span>
+				<span style="font-weight:bold;">${%check out scm}</span>
 			</xb:singleEntry>
 		</j:when>
 		
@@ -22,7 +22,7 @@
 		<!-- everything is ok -->
 		
 		<j:otherwise>
-			<xb:singleEntry title="${%Project directory}" help="help-projectdir.html" titleStyle="vertical-align:middle; padding:15px 0 0 14px;" mainStyle="padding:15px 0 0 5px;" helpStyle="padding:15px 0 0 0" helpAreaStyle="padding:0 0 0 14px;">
+			<xb:singleEntry title="${%project dir}" help="help-projectdir.html" titleStyle="vertical-align:middle; padding:15px 0 0 14px;" mainStyle="padding:15px 0 0 5px;" helpStyle="padding:15px 0 0 0" helpAreaStyle="padding:0 0 0 14px;">
 				<select name="ProjectDir" field="ProjectDir" 
 						onChange="refreshTargets(	'targets',
 													'${rootURL}/builder/XcodeBuilder/ajaxTargets',
@@ -34,11 +34,11 @@
 				<j:forEach items="${builder.getProjectDirs(workspace)}" var="projectDir">
 					<j:choose>
 						<j:when test="${empty(projectDir) and !empty(currentProjectDir)}">
-							<option value="">${%project root dir}</option>
+							<option value="">${%job root dir}</option>
 							<j:set var="loop" value="1" />
 						</j:when>
 						<j:when test="${empty(projectDir) and empty(currentProjectDir)}">
-							<option value="" selected="selected">${%project root dir}</option>
+							<option value="" selected="selected">${%job root dir}</option>
 							<j:set var="loop" value="1" />
 						</j:when>
 						<j:when test="${currentProjectDir != projectDir}">
@@ -58,18 +58,18 @@
 				</select>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%IPA filename}" help="help-ipafilename.html" titleStyle="vertical-align:middle; padding:4px 0 0 14px;" mainStyle="padding:4px 0 0 5px;" helpStyle="padding:4px 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
+			<xb:singleEntry title="${%ipa filename template}" help="help-ipatemplate.html" titleStyle="vertical-align:middle; padding:4px 0 0 14px;" mainStyle="padding:4px 0 0 5px;" helpStyle="padding:4px 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
-				<j:when test="${descriptor.getIpaFilenameGlobal()}">
-					<input name="IpaFilename" type="text" value="${descriptor.getIpaFilename()}" disabled="disabled" style="width:100%;" />
+				<j:when test="${descriptor.getIpaFilenameTemplateGlobal()}">
+					<input name="IpaFilenameTemplate" type="text" value="${descriptor.getIpaFilenameTemplate()}" disabled="disabled" style="width:100%;" />
 				</j:when>
 				<j:otherwise>
-					<f:textbox field="IpaFilename" default="${descriptor.getIpaFilename()}" />
+					<f:textbox field="IpaFilenameTemplate" default="${descriptor.getIpaFilenameTemplate()}" />
 				</j:otherwise>
 			</j:choose>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%use Xcode for cleanup}" help="help-xcodeclean.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" helpAreaStyle="padding:0 0 0 14px;">
+			<xb:singleEntry title="${%use xcode clean}" help="help-xcodeclean.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getXcodeCleanGlobal()}">
 					<input name="XcodeClean" type="checkbox" checked="${descriptor.getXcodeClean() ? 'true' : null}" disabled="disabled" />
@@ -80,7 +80,7 @@
 			</j:choose>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%Xcode project search depth}" help="help-xcodeprojsearchdepth.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:4px 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
+			<xb:singleEntry title="${%xcode project search depth}" help="help-xcodeprojsearchdepth.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:4px 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getXcodeProjSearchDepthGlobal()}">
 					<input name="XcodeProjSearchDepth" type="text" value="${descriptor.getXcodeProjSearchDepth()}" disabled="disabled" style="width:100%;" />
@@ -93,7 +93,7 @@
 			
 			<tr>
 				<td style="padding:10px 0 0 0;"><st:nbsp /></td>
-				<td style="padding:10px 0 0 14px;"><span style="font-weight:bold;">${%Build Targets}:</span></td>
+				<td style="padding:10px 0 0 14px;"><span style="font-weight:bold;">${%build targets}:</span></td>
 			</tr>
 			
 			<tr>

@@ -47,7 +47,7 @@ public class XcodeBuilder extends Builder {
 	private final static int MIN_XCODE_PROJ_SEARCH_DEPTH = 1;
 	private final static int MAX_XCODE_PROJ_SEARCH_DEPTH = 99;
 	private final static int DEFAULT_XCODE_PROJ_SEARCH_DEPTH = 10;
-	private final static String DEFAULT_IPAFILENAME = "<TARGET>_<CONFIG>_b<BUILD>_<DATETIME>";
+	private final static String DEFAULT_IPAFILENAMETEMPLATE = "<TARGET>_<CONFIG>_b<BUILD>_<DATETIME>";
 	
     private final Map<String,String> data;
 
@@ -63,11 +63,11 @@ public class XcodeBuilder extends Builder {
     	return this.data.get("ProjectDir");
     }
     
-    public String getIpaFilename() {
-    	if(!this.data.containsKey("IpaFilename"))
+    public String getIpaFilenameTemplate() {
+    	if(!this.data.containsKey("IpaFilenameTemplate"))
     		return null;
     	
-    	return this.data.get("IpaFilename");
+    	return this.data.get("IpaFilenameTemplate");
     }
     
     public boolean getXcodeClean() {
@@ -345,28 +345,28 @@ public class XcodeBuilder extends Builder {
     }
     
     private String createIPAFilename(AbstractBuild<?,?> build, String targetName, String configName) {
-    	String ipaFileName = getIpaFilename();
+    	String ipaFilename = getIpaFilenameTemplate();
     	
-    	if(ipaFileName.isEmpty())
-    		ipaFileName = DEFAULT_IPAFILENAME;
+    	if(ipaFilename.isEmpty())
+    		ipaFilename = DEFAULT_IPAFILENAMETEMPLATE;
     	
     	Date buildTimeStamp = build.getTimestamp().getTime();
     	
-    	ipaFileName = ipaFileName.replaceAll("<SECOND>",new SimpleDateFormat("ss").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<MINUTE>",new SimpleDateFormat("mm").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<HOUR>",new SimpleDateFormat("HH").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<DAY>",new SimpleDateFormat("dd").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<MONTH>",new SimpleDateFormat("MM").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<YEAR>",new SimpleDateFormat("yyyy").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<TIME>",new SimpleDateFormat("HH_mm_ss").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<DATE>",new SimpleDateFormat("yyyy_MM_dd").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<DATETIME>",new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(buildTimeStamp));
-    	ipaFileName = ipaFileName.replaceAll("<BUILD>",String.valueOf(build.getNumber()));
-    	ipaFileName = ipaFileName.replaceAll("<TARGET>",targetName);
-    	ipaFileName = ipaFileName.replaceAll("<CONFIG>",configName);
-    	ipaFileName += ".ipa";
+    	ipaFilename = ipaFilename.replaceAll("<SECOND>",new SimpleDateFormat("ss").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<MINUTE>",new SimpleDateFormat("mm").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<HOUR>",new SimpleDateFormat("HH").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<DAY>",new SimpleDateFormat("dd").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<MONTH>",new SimpleDateFormat("MM").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<YEAR>",new SimpleDateFormat("yyyy").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<TIME>",new SimpleDateFormat("HH_mm_ss").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<DATE>",new SimpleDateFormat("yyyy_MM_dd").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<DATETIME>",new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(buildTimeStamp));
+    	ipaFilename = ipaFilename.replaceAll("<BUILD>",String.valueOf(build.getNumber()));
+    	ipaFilename = ipaFilename.replaceAll("<TARGET>",targetName);
+    	ipaFilename = ipaFilename.replaceAll("<CONFIG>",configName);
+    	ipaFilename += ".ipa";
     	
-    	return ipaFileName;
+    	return ipaFilename;
     }
     
     @Extension
@@ -380,14 +380,13 @@ public class XcodeBuilder extends Builder {
     	private String currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
     	
     	private String xcodebuild;
-    	private String ipaFilename;
-        private boolean ipaFilenameGlobal;
+    	private String ipaFilenameTemplate;
+        private boolean ipaFilenameTemplateGlobal;
         private boolean xcodeClean, xcodeCleanGlobal;
         private int xcodeProjSearchDepth;
         private boolean xcodeProjSearchDepthGlobal;
         private boolean cleanBeforeBuild, cleanBeforeBuildGlobal;
         private boolean createIpa, createIpaGlobal;
-        //private boolean versioning;
         
         public DescriptorImpl() {
         	super(XcodeBuilder.class);
@@ -474,31 +473,21 @@ public class XcodeBuilder extends Builder {
             return this.createIpaGlobal;
         }
         
-        public void setIpaFilename(String ipaFilename) {
-        	this.ipaFilename = ipaFilename;
+        public void setIpaFilenameTemplate(String ipaFilenameTemplate) {
+        	this.ipaFilenameTemplate = ipaFilenameTemplate;
         }
         
-        public String getIpaFilename() {
-        	return this.ipaFilename;
+        public String getIpaFilenameTemplate() {
+        	return this.ipaFilenameTemplate;
         }
         
-        public void setIpaFilenameGlobal(boolean ipaFilenameGlobal) {
-        	this.ipaFilenameGlobal = ipaFilenameGlobal;
+        public void setIpaFilenameTemplateGlobal(boolean ipaFilenameTemplateGlobal) {
+        	this.ipaFilenameTemplateGlobal = ipaFilenameTemplateGlobal;
         }
         
         public boolean getIpaFilenameGlobal() {
-        	return this.ipaFilenameGlobal;
-        }
-        
-        /*
-        public void setUseHudsonVersioning(boolean hudsonVersioning) {
-        	this.versioning = hudsonVersioning;
-        }
-        
-        public boolean getUseHudsonVersioning() {
-            return this.versioning;
-        }
-        */   
+        	return this.ipaFilenameTemplateGlobal;
+        } 
         
         public String getProjectDir() {
         	return this.currentProjectDir;
@@ -588,9 +577,9 @@ public class XcodeBuilder extends Builder {
             return FormValidation.ok();
         }
         
-        public FormValidation doCheckIpaFilename(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckIpaFilenameTemplate(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
-        		return FormValidation.error("please set a default IPA filename ");
+        		return FormValidation.error("please set a default IPA filename template");
         	
             return FormValidation.ok();
         }

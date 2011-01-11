@@ -5,22 +5,22 @@
     		<f:textbox field="xcodebuild" name="xcodebuild.xcodebuild" value="${descriptor.getXcodebuild()}" />
     	</xb:singleEntry>
     	
-    	<xb:multipleEntry title="${%Xcode project search depth}" help="help-xcodeprojsearchdepth.html">
+    	<xb:multipleEntry title="${%xcode project search depth}" help="help-xcodeprojsearchdepth.html">
 			<td style="width:100%;">
 				<f:textbox field="xcodeProjSearchDepth" name="xcodebuild.xcodeProjSearchDepth" value="${descriptor.getXcodeProjSearchDepth()}" />
 			</td>
 			<td style="width:0%; padding:0 0 0 10px; margin:0px; white-space:nowrap;">
-				${%overwrite project settings:}
+				${%overwrite project settings}:
 				<f:checkbox name="xcodebuild.xcodeProjSearchDepthGlobal" checked="${descriptor.getXcodeProjSearchDepthGlobal()}" />
 			</td>
     	</xb:multipleEntry>
     	
-    	<xb:multipleEntry title="${%use Xcode for cleanup}" help="help-xcodeclean.html">
+    	<xb:multipleEntry title="${%use xcode clean}" help="help-xcodeclean.html">
 			<td style="width:0%;">
 				<f:checkbox name="xcodebuild.xcodeClean" checked="${descriptor.getXcodeClean()}" />
 			</td>
 			<td style="width:100%; padding:0 0 0 10px; margin:0px;">
-				${%overwrite project settings:}
+				${%overwrite project settings}:
 				<f:checkbox name="xcodebuild.xcodeCleanGlobal" checked="${descriptor.getXcodeCleanGlobal()}" />	
 			</td>
     	</xb:multipleEntry>
@@ -30,42 +30,30 @@
     			<f:checkbox name="xcodebuild.cleanBeforeBuild" checked="${descriptor.getCleanBeforeBuild()}" />
     		</td>
     		<td style="width:100%; padding:0 0 0 10px; margin:0px;">
-				${%overwrite project settings:}
+				${%overwrite project settings}:
 				<f:checkbox name="xcodebuild.cleanBeforeBuildGlobal" checked="${descriptor.getCleanBeforeBuildGlobal()}" />	 			
     		</td>
     	</xb:multipleEntry>
     	
-    	<xb:multipleEntry title="${%create IPA}" help="help-createipa.html">
+    	<xb:multipleEntry title="${%create ipa}" help="help-createipa.html">
     		<td style="width:0%;">
     			<f:checkbox name="xcodebuild.createIpa" checked="${descriptor.getCreateIpa()}" />
     		</td>
     		<td style="width:100%; padding:0 0 0 10px; margin:0px;">
-    			${%overwrite project settings:}
+    			${%overwrite project settings}:
     			<f:checkbox name="xcodebuild.createIpaGlobal" checked="${descriptor.getCreateIpaGlobal()}" />
     		</td>
     	</xb:multipleEntry>
     	
-    	<xb:multipleEntry title="${%IPA filename}" help="help-ipafilename.html">
+    	<xb:multipleEntry title="${%ipa filename template}" help="help-ipatemplate.html">
     		<td style="width:100%;">
-    			<f:textbox field="ipaFilename" name="xcodebuild.ipaFilename" value="${descriptor.getIpaFilename()}" />
+    			<f:textbox field="ipaFilenameTemplate" name="xcodebuild.ipaFilenameTemplate" value="${descriptor.getIpaFilenameTemplate()}" />
     		</td>
     		<td style="width:0%; padding:0 0 0 10px; margin:0px; white-space:nowrap;">
-    			${%overwrite project settings:}
-    			<f:checkbox name="xcodebuild.ipaFilenameGlobal" checked="${descriptor.getIpaFilenameGlobal()}" />
+    			${%overwrite project settings}:
+    			<f:checkbox name="xcodebuild.ipaFilenameTemplateGlobal" checked="${descriptor.getIpaFilenameTemplateGlobal()}" />
     		</td>
     	</xb:multipleEntry>
-    	
-    	<!--
-    	<xb:multipleEntry title="${%use Hudson versioning}" help="help-usehudsonversioning.html">
-    		<td style="width:0%;">
-    			<f:checkbox name="xcodebuild.useHudsonVersioning" checked="${descriptor.getUseHudsonVersioning()}" />
-    		</td>
-    		<td style="width:100%; padding:0 0 0 10px; margin:0px;">
-    			${%overwrite project settings:}
-    			<f:checkbox name="xcodebuild.useHudsonVersioningGlobal" checked="${descriptor.getUseHudsonVersioningGlobal()}" />
-    		</td>
-    	</xb:multipleEntry>
-    	-->
 	</f:section>
 	
 </j:jelly>
