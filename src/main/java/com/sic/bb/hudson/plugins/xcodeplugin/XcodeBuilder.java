@@ -1,4 +1,4 @@
-package com.sic.bb.xcodeplugin;
+package com.sic.bb.hudson.plugins.xcodeplugin;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -137,8 +137,8 @@ public class XcodeBuilder extends Builder {
     }
     
     @Override
-    public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) super.getDescriptor();
+    public XcodeBuilderDescriptor getDescriptor() {
+        return (XcodeBuilderDescriptor) super.getDescriptor();
     }
     
     /*
@@ -151,7 +151,7 @@ public class XcodeBuilder extends Builder {
     
     @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) {
-        listener.getLogger().println("Xcodebuilder: started");
+        listener.getLogger().println(Messages.XcodeBuilder_perform_started());
 		
         String xcodebuild = getDescriptor().getXcodebuild();
         FilePath workspace = build.getWorkspace();
@@ -163,12 +163,12 @@ public class XcodeBuilder extends Builder {
         	EnvVars envs = build.getEnvironment(listener);
         	
 			if(!new FilePath(workspace.getChannel(), xcodebuild).exists()) {
-				listener.fatalError("cannot find xcodebuild: " + xcodebuild);
+				listener.fatalError(Messages.XcodeBuilder_perform_xcodebuildNotFound() + ": " + xcodebuild);
 				return false;
 			}
 			
 			if(!workspace.exists()) {
-				listener.fatalError("cannot find project dir: " + workspace);
+				listener.fatalError(Messages.XcodeBuilder_perform_projectDirNotFound() + ": " + workspace);
 				return false;
 			}
 			
@@ -262,11 +262,10 @@ public class XcodeBuilder extends Builder {
 	                
 	                payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
 	                
-	                //payload.deleteRecursive();
+	                payload.deleteRecursive();
 	            }
 			}
 			
-			// check for failed build
 			if(returnCodes.contains(BUILD_ERROR))
 				return false;
 			else
@@ -370,12 +369,10 @@ public class XcodeBuilder extends Builder {
     }
     
     @Extension
-    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+    public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
     	private static final Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
         private static final Pattern parseXcodeBuildListPattern1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
         private static final Pattern parseXcodeBuildListPattern2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
-        
-        private static final String DisplayName = "Xcode build";
         
     	private String currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
     	
@@ -388,7 +385,7 @@ public class XcodeBuilder extends Builder {
         private boolean cleanBeforeBuild, cleanBeforeBuildGlobal;
         private boolean createIpa, createIpaGlobal;
         
-        public DescriptorImpl() {
+        public XcodeBuilderDescriptor() {
         	super(XcodeBuilder.class);
         	load();
         }
@@ -502,7 +499,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public String getDisplayName() {
-            return DisplayName;
+            return Messages.XcodeBuilderDescriptor_getDisplayName();
         }
         
         @Override
@@ -543,22 +540,33 @@ public class XcodeBuilder extends Builder {
         
         public void doAjaxTargets(StaplerRequest req, StaplerResponse rsp, @QueryParameter String projectDir) throws IOException, ServletException {
         	this.currentProjectDir = projectDir;
-        	req.getView(this,"/com/sic/bb/xcodeplugin/XcodeBuilder/targets.jelly").forward(req, rsp);
+        	String pack = "/" + XcodeBuilder.class.getPackage().getName() + "/";
+        	pack = pack.replaceAll("\\.", "\\/");
+        	req.getView(this,pack + "targets.jelly").forward(req, rsp);
         }
         
         public FormValidation doCheckXcodebuild(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
-        		return FormValidation.error("insert absolute path to xcodebuild");
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_emptyValue());
+        	
+        	try {
+        		FilePath xcodebuild = new FilePath(new File(value));
+        		
+        		if(!xcodebuild.exists() || xcodebuild.isDirectory())
+        			return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_fileNotExists());
+        	} catch(InterruptedException e) {
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_fileNotExists());
+        	}
         	
             if(!value.contains("xcodebuild"))
-            	return FormValidation.warningWithMarkup("xcodebuild should be the cli command");
+            	return FormValidation.warningWithMarkup(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_valueNotContainingXcodebuild());
             
             return FormValidation.ok();
         }
         
         public FormValidation doCheckXcodeProjSearchDepth(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
-        		return FormValidation.error("insert max xcode project search depth (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH +
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_emptyValue() + " (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH +
         				", max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ")");
         	
         	int xcodeProjSearchDepth;
@@ -566,20 +574,20 @@ public class XcodeBuilder extends Builder {
         	try {
         		xcodeProjSearchDepth = Integer.parseInt(value);
         	} catch(NumberFormatException e) {
-        		return FormValidation.error("value is not a number");
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueNotANumber());
         	}
  
         	if(xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH)
-        		return FormValidation.error("value is to small (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH + ")");
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueTooSmall() + " (min " + XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH + ")");
         	else if(xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
-        		return FormValidation.error("value is to big (max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ")");
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueTooBig() + " (max " + XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH + ")");
         	
             return FormValidation.ok();
         }
         
         public FormValidation doCheckIpaFilenameTemplate(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
-        		return FormValidation.error("please set a default IPA filename template");
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckIpaFilenameTemplate_setDefaultIpaFilename());
         	
             return FormValidation.ok();
         }

@@ -1,4 +1,4 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/xcodeplugin/XcodeBuilder/lib">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/xcodeplugin/XcodeBuilder/lib">
 	
 	<j:set var="builder" value="${instance}" defaultValue="${descriptor}" />
 	<j:set var="workspace" value="${it.getSomeWorkspace().toString()}" />

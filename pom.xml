@@ -7,14 +7,14 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>com.sic.bb.xcodeplugin</groupId>
-  <artifactId>XcodeBuilder</artifactId>
-  <name>XcodeBuilder Plugin</name>
+  <groupId>com.sic.bb.hudson.plugins</groupId>
+  <artifactId>xcodeplugin</artifactId>
+  <name>Xcode Plugin</name>
   <version>0.0.4</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
-  <description>Plugin to build Xcode Projects</description>
+  <description>Plugin to build Xcode projects</description>
   <repositories>
     <repository>
       <id>m.g.o-public</id>

@@ -1,7 +1,7 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/xcodeplugin/XcodeBuilder/lib">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/xcodeplugin/XcodeBuilder/lib">
 	
-	<f:section title="Xcode Builder">
-    	<xb:singleEntry title="${%xcodebuild}" help="help-xcodebuild.html">
+	<f:section title="${%xcode section title}">
+    	<xb:singleEntry title="${%xcodebuild path}" help="help-xcodebuild.html">
     		<f:textbox field="xcodebuild" name="xcodebuild.xcodebuild" value="${descriptor.getXcodebuild()}" />
     	</xb:singleEntry>
     	
