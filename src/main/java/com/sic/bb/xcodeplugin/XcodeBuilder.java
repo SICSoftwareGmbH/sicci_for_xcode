@@ -34,6 +34,8 @@ import javax.servlet.ServletException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -182,15 +184,15 @@ public class XcodeBuilder extends Builder {
 					FilePath buildDir = workspace.child("build");
 					String[] array = toClean.split("\\|");
 					
-					try {
-						for(FilePath dir: buildDir.list(new BuildDirFilter())) {
+					List<FilePath> buildDirs = buildDir.list(new BuildDirFilter());
+					
+					if(buildDirs != null) {
+						for(FilePath dir: buildDirs) {
 							dir = dir.child(array[1] + "-iphoneos").child(array[0] + ".build");
 							
 							if(dir.isDirectory())
 								dir.deleteRecursive();
 						}
-					} catch(NullPointerException e) {
-						// TODO
 					}
 					
 					buildDir = buildDir.child(array[1] + "-iphoneos");
@@ -250,17 +252,17 @@ public class XcodeBuilder extends Builder {
 	                
 	                if(payload.exists())
 	                	payload.deleteRecursive();
-
-	                app.copyRecursiveTo(payload.child(app.getName()));
 	                
-	                //payload.mkdirs();
-	                //app.renameTo(payload.child(app.getName()));
+	                payload.mkdirs();
+	                app.renameTo(payload.child(app.getName()));
 	                
-	                payload.zip(ipa.write());
+	                ZipArchiveOutputStream zipStream = new ZipArchiveOutputStream(ipa.write());
+	                zipDirectory(payload,"",zipStream);
+	                zipStream.close();
 	                
-	                //payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
+	                payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
 	                
-	                payload.deleteRecursive();
+	                //payload.deleteRecursive();
 	            }
 			}
 			
@@ -300,7 +302,7 @@ public class XcodeBuilder extends Builder {
     	return toPerformStep;
     }
     
-    private List<String> createCmds(String xcodebuild, String arg, String cmd) {
+    private static List<String> createCmds(String xcodebuild, String arg, String cmd) {
     	List<String> cmds = new ArrayList<String>();
     	String[] args = arg.split("\\|");
 		
@@ -312,6 +314,34 @@ public class XcodeBuilder extends Builder {
 		cmds.add(cmd);
 		
 		return cmds;
+    }
+    
+    private static void zipDirectory(FilePath directory, String path, ZipArchiveOutputStream zipStream) {
+    	if(path != null && !path.isEmpty())
+    		path += "/";
+    		
+		try {
+	    	ZipArchiveEntry zipEntry = new ZipArchiveEntry(new File(directory.toURI()),path + directory.getName());
+	    	zipEntry.setUnixMode(directory.mode());
+	    	zipStream.putArchiveEntry(zipEntry);
+	    	
+	    	if(!directory.isDirectory()) {
+	    		directory.copyTo(zipStream);
+	    		zipStream.closeArchiveEntry();
+			} else {
+				zipStream.closeArchiveEntry();
+				
+		    	List<FilePath> entries = directory.list();
+		    		
+		    	if(entries != null)
+		    		for(FilePath entry: entries)
+		    			zipDirectory(entry,path + directory.getName(),zipStream);
+			}
+		} catch(InterruptedException e) {
+			// TODO
+		} catch(IOException e) {
+			// TODO
+		}
     }
     
     private String createIPAFilename(AbstractBuild<?,?> build, String targetName, String configName) {
@@ -360,7 +390,7 @@ public class XcodeBuilder extends Builder {
         //private boolean versioning;
         
         public DescriptorImpl() {
-        	super();
+        	super(XcodeBuilder.class);
         	load();
         }
         
@@ -517,9 +547,8 @@ public class XcodeBuilder extends Builder {
         
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-            req.bindJSON(this, formData);          
+            req.bindJSON(this, formData);
             save();
-            
             return super.configure(req,formData);
         }
         
