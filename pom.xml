@@ -10,7 +10,7 @@
   <groupId>com.sic.bb.hudson.plugins</groupId>
   <artifactId>xcodeplugin</artifactId>
   <name>Xcode Plugin</name>
-  <version>0.0.4</version>
+  <version>0.0.5</version>
   <packaging>hpi</packaging>
 
   <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
