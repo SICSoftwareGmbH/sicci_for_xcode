@@ -1,0 +1,51 @@
+<j:jelly xmlns:j="jelly:core">
+	<script defer="defer">
+		function refreshTargets(id,url,projectDir) {
+	        new Ajax.Request(url, {
+	        	method: 'post',
+	        	parameters: {
+	        		projectDir: projectDir
+	        	},
+	        	onLoading: function() {
+	        		var hist = $(id);
+	                var p = hist.parentNode;
+	                var next = hist.nextSibling;
+	                p.removeChild(hist);
+	                
+	                var style_attr = document.createAttribute('style');
+	                style_attr.nodeValue = 'margin:15px 0px 10px 40px;';
+	                
+	                var span_loading = document.createElement('span');
+	                span_loading.setAttributeNode(style_attr);
+	                span_loading.appendChild(document.createTextNode('loading...'));
+	                
+	                var div_targets = document.createElement('div');
+	                div_targets.id = 'targets';
+	                div_targets.appendChild(span_loading);
+	                
+	                var div = document.createElement('div');
+	                div.appendChild(div_targets);
+	
+	                var node = div.firstChild;
+	                p.insertBefore(node, next);
+	
+	                Behaviour.applySubtree(node);
+	        	},
+	            onSuccess: function(response) {
+	                var hist = $(id);
+	                var p = hist.parentNode;
+	                var next = hist.nextSibling;
+	                p.removeChild(hist);
+	
+	                var div = document.createElement('div');
+	                div.innerHTML = response.responseText;
+	
+	                var node = div.firstChild;
+	                p.insertBefore(node, next);
+	
+	                Behaviour.applySubtree(node);
+	            }
+	        });
+	    };
+	</script>
+</j:jelly>

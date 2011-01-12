@@ -321,6 +321,7 @@ public class XcodeBuilder extends Builder {
     		path += '/';
     		
 		try {
+			// could be a problem if the file is on a remote host, so the relativ path is wrong on this machine
 	    	ZipArchiveEntry zipEntry = new ZipArchiveEntry(new File(directory.toURI()),path + directory.getName());
 	    	zipEntry.setUnixMode(directory.mode());
 	    	zipStream.putArchiveEntry(zipEntry);
