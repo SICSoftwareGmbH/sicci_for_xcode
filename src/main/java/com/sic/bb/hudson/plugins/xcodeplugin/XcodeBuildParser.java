@@ -10,12 +10,27 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-public class XcodeBuildParser {
+public class XcodebuildParser {
 	private final static Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
 	private final static Pattern parseXcodeBuildListPattern1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
 	private final static Pattern parseXcodeBuildListPattern2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
 	
-	private String xcodebuildOutputTemp, workspaceTemp;
+	private String xcodebuild;
+	private String xcodebuildOutputTemp;
+	private String workspaceTemp;
+	
+	public XcodebuildParser(String xcodebuild) {
+		this.xcodebuild = xcodebuild;
+	}
+	
+	public void setXcodebuild(String xcodebuild) {
+		this.xcodebuild = xcodebuild;
+	}
+	
+	public void setWorkspaceTemp(String workspace) {
+		if(this.workspaceTemp != null && this.workspaceTemp.contains(workspace))
+			this.workspaceTemp = null;
+	}
 	
 	public String[] getBuildConfigurations(String workspace) {
     	return parseXcodebuildList(workspace, "Build Configurations:");
@@ -25,7 +40,7 @@ public class XcodeBuildParser {
     	return parseXcodebuildList(workspace, "Targets:");
     }
     
-    public String[] availableSdks(String workspace) {
+    public String[] getAvailableSdks(String workspace) {
 		ArrayList<String> sdks = new ArrayList<String>();
 		
 		for(String sdk: callXcodebuild(workspace,"-showsdks").toString().split("\n")) {
@@ -64,7 +79,7 @@ public class XcodeBuildParser {
     	else
     		this.workspaceTemp = workspace + arg;
     	
-    	FilePath file = new FilePath(new File(this.xcodebuild));
+    	FilePath file = new FilePath(new File(new String()));
     	ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     	
     	try {

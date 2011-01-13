@@ -11,9 +11,7 @@ import hudson.model.FreeStyleProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
-import hudson.util.StreamTaskListener;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -27,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
@@ -93,10 +90,9 @@ public class XcodeBuilder extends Builder {
     }
     
     public boolean subMenuUsed(String target) {
-    	for(String key: (String[]) this.data.keySet().toArray(new String[this.data.size()])) {
+    	for(String key: (String[]) this.data.keySet().toArray(new String[this.data.size()]))
     		if(key.contains(target + '|'))
     			return true;
-    	}
     	
     	return false;
     }
@@ -113,29 +109,29 @@ public class XcodeBuilder extends Builder {
     	if(searchDepth < MIN_XCODE_PROJ_SEARCH_DEPTH || searchDepth > MAX_XCODE_PROJ_SEARCH_DEPTH
     			|| getDescriptor().getXcodeProjSearchDepthGlobal())
     		return getDescriptor().getProjectDirs(workspace);
-    	else
-    		return getDescriptor().getProjectDirs(workspace,searchDepth);
+
+    	return getDescriptor().getProjectDirs(workspace,searchDepth);
     }
     
     public String[] availableSdks(String workspace) {
     	if(getProjectDir() != null)
     		return getDescriptor().availableSdks(workspace + '/' + getProjectDir());
-    	else
-    		return getDescriptor().availableSdks(workspace);
+    	
+    	return getDescriptor().availableSdks(workspace);
     }
 
     public String[] getBuildConfigurations(String workspace) {
     	if(getProjectDir() != null)
     		return getDescriptor().getBuildConfigurations(workspace + '/' + getProjectDir());
-    	else
-    		return getDescriptor().getBuildConfigurations(workspace);
+
+    	return getDescriptor().getBuildConfigurations(workspace);
     }
     
     public String[] getBuildTargets(String workspace) {
     	if(getProjectDir() != null)
     		return getDescriptor().getBuildTargets(workspace + '/' + getProjectDir());
-    	else
-    		return getDescriptor().getBuildTargets(workspace);
+
+    	return getDescriptor().getBuildTargets(workspace);
     }
     
     @Override
@@ -158,6 +154,8 @@ public class XcodeBuilder extends Builder {
         XcodeBuilderDescriptor descr = getDescriptor();
         String xcodebuild = descr.getXcodebuild();
         FilePath workspace = build.getWorkspace();
+
+        descr.getXcodebuildParser().setWorkspaceTemp(workspace.getParent().getName());
         
         if(getProjectDir() != null)
 			workspace = workspace.child(getProjectDir());
@@ -276,9 +274,8 @@ public class XcodeBuilder extends Builder {
 			
 			if(returnCodes.contains(BUILD_ERROR))
 				return false;
-			else
-				return true;
 			
+			return true;
 		} catch (IOException e) {
 			// TODO
 			listener.getLogger().println("IOException:" + e.getMessage());
@@ -382,9 +379,23 @@ public class XcodeBuilder extends Builder {
     	return ipaFilename;
     }
     
+    @SuppressWarnings("serial")
+	private final class AppDirFilter implements FileFilter,Serializable {
+        public boolean accept(File pathname) {
+            return pathname.isDirectory() && pathname.getName().endsWith(".app");
+        }
+    }
+    
+    @SuppressWarnings("serial")
+	private final class BuildDirFilter implements FileFilter,Serializable {
+        public boolean accept(File pathname) {
+            return pathname.isDirectory() && pathname.getName().endsWith(".build");
+        }
+    }
+    
     @Extension
     public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
-    	private XcodeBuildParser xcodebuildParser;
+    	private XcodebuildParser xcodebuildParser;
     	
     	private String currentProjectDir;
     	private String xcodebuild;
@@ -398,8 +409,14 @@ public class XcodeBuilder extends Builder {
         
         public XcodeBuilderDescriptor() {
         	super(XcodeBuilder.class);
-        	this.xcodebuildParser = new XcodeBuildParser();
         	load();
+        	
+        	if(this.xcodebuildParser == null)
+            	this.xcodebuildParser = new XcodebuildParser(getXcodebuild());
+        }
+        
+        public XcodebuildParser getXcodebuildParser() {
+        	return this.xcodebuildParser;
         }
         
         public String getXcodebuild() {
@@ -412,8 +429,10 @@ public class XcodeBuilder extends Builder {
         public void setXcodebuild(String xcodebuild) {
         	if(xcodebuild == null || xcodebuild.isEmpty())
         		this.xcodebuild = XcodeBuilder.DEFAULT_XCODEBUILD_PATH;
+        	else
+        		this.xcodebuild = xcodebuild;
         	
-        	this.xcodebuild = xcodebuild;
+        	this.xcodebuildParser.setXcodebuild(xcodebuild);
         }
         
         public void setXcodeClean(boolean xcodeClean) {
@@ -495,8 +514,8 @@ public class XcodeBuilder extends Builder {
         public void setIpaFilenameTemplate(String ipaFilenameTemplate) {
         	if(ipaFilenameTemplate == null || ipaFilenameTemplate.isEmpty())
         		this.ipaFilenameTemplate = XcodeBuilder.DEFAULT_IPA_FILENAME_TEMPLATE;
-        	
-        	this.ipaFilenameTemplate = ipaFilenameTemplate;
+        	else
+        		this.ipaFilenameTemplate = ipaFilenameTemplate;
         }
         
         public String getIpaFilenameTemplate() {
@@ -661,16 +680,13 @@ public class XcodeBuilder extends Builder {
     			if(dir.list(new XcodeProjDirFilter()).size() != 0)
     				projectDirs.add(workspace + '/');
         		
-				for(FilePath path : dir.listDirectories()) {
+				for(FilePath path : dir.listDirectories())
 					if(!projectDirs.contains(workspace + '/' + path.getName()))
 						projectDirs.addAll(searchXcodeProjFiles(workspace + '/' + path.getName(), searchDepth - 1));
-				}
 			} catch (IOException e) {
 				// TODO
-				//projectDirs.add("IOException: " + e.getMessage());
 			} catch (InterruptedException e) {
 				// TODO
-				//projectDirs.add("InterruptedException: " + e.getMessage());
 			}
 			
 			return projectDirs;
@@ -685,7 +701,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public String[] availableSdks(String workspace) {
-			return this.xcodebuildParser.availableSdks(workspace);
+			return this.xcodebuildParser.getAvailableSdks(workspace);
         }
         
         @SuppressWarnings("serial")
@@ -693,20 +709,6 @@ public class XcodeBuilder extends Builder {
             public boolean accept(File pathname) {
                 return pathname.isDirectory() && pathname.getName().endsWith(".xcodeproj");
             }
-        }
-    }
-    
-    @SuppressWarnings("serial")
-	private final class AppDirFilter implements FileFilter,Serializable {
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".app");
-        }
-    }
-    
-    @SuppressWarnings("serial")
-	private final class BuildDirFilter implements FileFilter,Serializable {
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".build");
         }
     }
     
