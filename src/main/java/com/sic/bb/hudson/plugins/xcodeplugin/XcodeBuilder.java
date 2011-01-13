@@ -384,12 +384,9 @@ public class XcodeBuilder extends Builder {
     
     @Extension
     public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
-    	private final static Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
-    	private final static Pattern parseXcodeBuildListPattern1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
-    	private final static Pattern parseXcodeBuildListPattern2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
-        
-    	private String currentProjectDir, workspaceTemp, xcodebuildOutputTemp;
+    	private XcodeBuildParser xcodebuildParser;
     	
+    	private String currentProjectDir;
     	private String xcodebuild;
     	private String ipaFilenameTemplate;
         private boolean ipaFilenameTemplateGlobal;
@@ -401,6 +398,7 @@ public class XcodeBuilder extends Builder {
         
         public XcodeBuilderDescriptor() {
         	super(XcodeBuilder.class);
+        	this.xcodebuildParser = new XcodeBuildParser();
         	load();
         }
         
@@ -679,69 +677,15 @@ public class XcodeBuilder extends Builder {
         }
         
         public String[] getBuildConfigurations(String workspace) {
-        	return parseXcodebuildList(workspace, "Build Configurations:");
+        	return this.xcodebuildParser.getBuildConfigurations(workspace);
         }
         
         public String[] getBuildTargets(String workspace) {
-        	return parseXcodebuildList(workspace, "Targets:");
+        	return this.xcodebuildParser.getBuildTargets(workspace);
         }
         
         public String[] availableSdks(String workspace) {
-			ArrayList<String> sdks = new ArrayList<String>();
-			
-			for(String sdk: callXcodebuild(workspace,"-showsdks").toString().split("\n")) {
-				if(!sdk.contains("-sdk"))
-					continue;
-				
-				sdks.add(availableSdksPattern.matcher(sdk).replaceAll("$1"));
-			}
-        
-			return (String[]) sdks.toArray(new String[sdks.size()]);
-        }
-        
-        private String[] parseXcodebuildList(String workspace, String arg) {
-			ArrayList<String> items = new ArrayList<String>();
-			boolean found = false;
-			
-			for(String item: callXcodebuild(workspace,"-list").toString().split("\n")) {
-				if(item.contains(arg)) {
-					found = true;
-					continue;
-				}
-					
-				if(!found) continue;
-				if(item.isEmpty()) break;
-				
-				item = parseXcodeBuildListPattern1.matcher(item).replaceAll("$1");
-				items.add(parseXcodeBuildListPattern2.matcher(item).replaceAll("$1"));
-			}
-        
-			return (String[]) items.toArray(new String[items.size()]);
-        }
-        
-        private String callXcodebuild(String workspace, String arg) {
-        	if(this.workspaceTemp != null && this.workspaceTemp.equals(workspace + arg))
-        		return this.xcodebuildOutputTemp;
-        	else
-        		this.workspaceTemp = workspace + arg;
-        	
-	    	FilePath file = new FilePath(new File(getXcodebuild()));
-	    	ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-	    	
-	    	try {
-	    		Launcher launcher = file.createLauncher(new StreamTaskListener(new ByteArrayOutputStream()));
-	    		launcher.launch().stdout(stdout).pwd(workspace).cmds(getXcodebuild(), arg).join();
-			} catch (IOException e) {
-				// TODO
-				return "IOException: " + e.getMessage();
-			} catch (InterruptedException e) {
-				// TODO
-				return "InterruptedException: " + e.getMessage();
-			}
-			
-			this.xcodebuildOutputTemp = stdout.toString();
-			
-			return this.xcodebuildOutputTemp;
+			return this.xcodebuildParser.availableSdks(workspace);
         }
         
         @SuppressWarnings("serial")
