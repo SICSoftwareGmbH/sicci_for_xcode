@@ -110,7 +110,8 @@ public class XcodeBuilder extends Builder {
     		// TODO
     	}
     	
-    	if(searchDepth < MIN_XCODE_PROJ_SEARCH_DEPTH || searchDepth > MAX_XCODE_PROJ_SEARCH_DEPTH)
+    	if(searchDepth < MIN_XCODE_PROJ_SEARCH_DEPTH || searchDepth > MAX_XCODE_PROJ_SEARCH_DEPTH
+    			|| getDescriptor().getXcodeProjSearchDepthGlobal())
     		return getDescriptor().getProjectDirs(workspace);
     	else
     		return getDescriptor().getProjectDirs(workspace,searchDepth);
@@ -154,7 +155,8 @@ public class XcodeBuilder extends Builder {
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println(Messages.XcodeBuilder_perform_started());
 		
-        String xcodebuild = getDescriptor().getXcodebuild();
+        XcodeBuilderDescriptor descr = getDescriptor();
+        String xcodebuild = descr.getXcodebuild();
         FilePath workspace = build.getWorkspace();
         
         if(getProjectDir() != null)
@@ -176,33 +178,36 @@ public class XcodeBuilder extends Builder {
 			List<Integer> returnCodes = new ArrayList<Integer>();
 			
 			// cleanup
-			if(getXcodeClean())
-				for(String toClean: getToPerformStep("clean"))
-					returnCodes.add(launcher.launch().envs(envs).stdout(listener).pwd(workspace).
-							cmds(createCmds(xcodebuild,toClean,"clean")).join());
-			else {
-				for(String toClean: getToPerformStep("clean")) {
-					FilePath buildDir = workspace.child("build");
-					String[] array = toClean.split("\\|");
-					
-					List<FilePath> buildDirs = buildDir.list(new BuildDirFilter());
-					
-					if(buildDirs != null) {
-						for(FilePath dir: buildDirs) {
-							dir = dir.child(array[1] + "-iphoneos").child(array[0] + ".build");
-							
-							if(dir.isDirectory())
-								dir.deleteRecursive();
+			if(!(descr.getCleanBeforeBuildGlobal() && !descr.getCleanBeforeBuild())) {
+				if((descr.getXcodeCleanGlobal() && descr.getXcodeClean()) || 
+						(!descr.getXcodeCleanGlobal() && getXcodeClean()))
+					for(String toClean: getToPerformStep("clean",(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
+						returnCodes.add(launcher.launch().envs(envs).stdout(listener).pwd(workspace).
+								cmds(createCmds(xcodebuild,toClean,"clean")).join());
+				else {
+					for(String toClean: getToPerformStep("clean",(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild()))) {
+						FilePath buildDir = workspace.child("build");
+						String[] array = toClean.split("\\|");
+						
+						List<FilePath> buildDirs = buildDir.list(new BuildDirFilter());
+						
+						if(buildDirs != null) {
+							for(FilePath dir: buildDirs) {
+								dir = dir.child(array[1] + "-iphoneos").child(array[0] + ".build");
+								
+								if(dir.isDirectory())
+									dir.deleteRecursive();
+							}
 						}
+						
+						buildDir = buildDir.child(array[1] + "-iphoneos");
+						
+						if(buildDir.child(array[0] + ".app").isDirectory())
+							buildDir.child(array[0] + ".app").deleteRecursive();
+						
+						if(buildDir.child(array[0] + ".app.dSYM").isDirectory())
+							buildDir.child(array[0] + ".app.dSYM").deleteRecursive();
 					}
-					
-					buildDir = buildDir.child(array[1] + "-iphoneos");
-					
-					if(buildDir.child(array[0] + ".app").isDirectory())
-						buildDir.child(array[0] + ".app").deleteRecursive();
-					
-					if(buildDir.child(array[0] + ".app.dSYM").isDirectory())
-						buildDir.child(array[0] + ".app.dSYM").deleteRecursive();
 				}
 			}
 			
@@ -210,7 +215,7 @@ public class XcodeBuilder extends Builder {
 			ArrayList<String> blackList =  new ArrayList<String>();
 			
 			// build
-			for(String toBuild: getToPerformStep("build")) {
+			for(String toBuild: getToPerformStep("build",true)) {
 				int rcode = launcher.launch().envs(envs).stdout(listener).pwd(workspace).
 						cmds(createCmds(xcodebuild,toBuild,"build")).join();
 				
@@ -222,49 +227,51 @@ public class XcodeBuilder extends Builder {
 			
 			
 			// create ipa
-			for(String toCreateIPA: getToPerformStep("ipa")) {
-				if(blackList.contains(toCreateIPA)) {
-					returnCodes.add(BUILD_ERROR);
-					continue;
-				}
+			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
+				for(String toCreateIPA: getToPerformStep("ipa",(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
+					if(blackList.contains(toCreateIPA)) {
+						returnCodes.add(BUILD_ERROR);
+						continue;
+					}
+						
+					FilePath buildDir = workspace.child("build");
+					String[] array = toCreateIPA.split("\\|");
 					
-				FilePath buildDir = workspace.child("build");
-				String[] array = toCreateIPA.split("\\|");
-				
-				if(buildDir.child(array[1]).isDirectory())
-					buildDir = buildDir.child(array[1]);
-				else if(buildDir.child(array[1] + "-iphoneos").isDirectory())
-					buildDir = buildDir.child(array[1] + "-iphoneos");
-				else {
-					returnCodes.add(BUILD_ERROR);
-					continue;
+					if(buildDir.child(array[1]).isDirectory())
+						buildDir = buildDir.child(array[1]);
+					else if(buildDir.child(array[1] + "-iphoneos").isDirectory())
+						buildDir = buildDir.child(array[1] + "-iphoneos");
+					else {
+						returnCodes.add(BUILD_ERROR);
+						continue;
+					}
+					
+		            for(FilePath app: buildDir.list(new AppDirFilter())) {
+		            	if(!app.getBaseName().equals(array[0]))
+		            		continue;
+		            	            	
+		            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
+		                
+		                if(ipa.exists())
+		                	ipa.delete();
+	
+		                FilePath payload = buildDir.child("Payload");
+		                
+		                if(payload.exists())
+		                	payload.deleteRecursive();
+		                
+		                payload.mkdirs();
+		                app.renameTo(payload.child(app.getName()));
+		                
+		                ZipArchiveOutputStream zipStream = new ZipArchiveOutputStream(ipa.write());
+		                zipDirectory(payload,"",zipStream);
+		                zipStream.close();
+		                
+		                payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
+		                
+		                payload.deleteRecursive();
+		            }
 				}
-				
-	            for(FilePath app: buildDir.list(new AppDirFilter())) {
-	            	if(!app.getBaseName().equals(array[0]))
-	            		continue;
-	            	            	
-	            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
-	                
-	                if(ipa.exists())
-	                	ipa.delete();
-
-	                FilePath payload = buildDir.child("Payload");
-	                
-	                if(payload.exists())
-	                	payload.deleteRecursive();
-	                
-	                payload.mkdirs();
-	                app.renameTo(payload.child(app.getName()));
-	                
-	                ZipArchiveOutputStream zipStream = new ZipArchiveOutputStream(ipa.write());
-	                zipDirectory(payload,"",zipStream);
-	                zipStream.close();
-	                
-	                payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
-	                
-	                payload.deleteRecursive();
-	            }
 			}
 			
 			if(returnCodes.contains(BUILD_ERROR))
@@ -283,7 +290,7 @@ public class XcodeBuilder extends Builder {
         return false;
     }
     
-    private Set<String> getToPerformStep(String cmd) {
+    private Set<String> getToPerformStep(String cmd, boolean force) {
     	String[] keys = (String[]) this.data.keySet().toArray(new String[this.data.size()]);
     	Set<String> toPerformStep = new HashSet<String>();
     	
@@ -293,7 +300,7 @@ public class XcodeBuilder extends Builder {
 			
 			String[] fields = key.split("\\|");
 			
-			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || !this.data.get(key).equals("true")))
+			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || (!force && !this.data.get(key).equals("true"))))
 				continue;
 			
 			toPerformStep.add(fields[0] + '|' + fields[1]);
@@ -346,7 +353,12 @@ public class XcodeBuilder extends Builder {
     }
     
     private String createIPAFilename(AbstractBuild<?,?> build, String targetName, String configName) {
-    	String ipaFilename = getIpaFilenameTemplate();
+    	String ipaFilename;
+    	
+    	if(getDescriptor().ipaFilenameTemplateGlobal)
+    		ipaFilename = getDescriptor().getIpaFilenameTemplate();
+    	else
+    		ipaFilename = getIpaFilenameTemplate();
     	
     	if(ipaFilename == null || ipaFilename.isEmpty())
     		ipaFilename = DEFAULT_IPA_FILENAME_TEMPLATE;

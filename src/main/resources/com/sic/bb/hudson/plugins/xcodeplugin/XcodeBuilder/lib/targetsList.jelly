@@ -13,6 +13,7 @@
 		<j:when test="${targets.size() == 0}">
 			<span style="margin:15px 0px 10px 40px;">${%no target found}</span>
 		</j:when>
+		
 		<j:otherwise>
 			<table style="width:100%; padding:0 0 0 20px;">
 			<j:forEach items="${targets}" var="target">

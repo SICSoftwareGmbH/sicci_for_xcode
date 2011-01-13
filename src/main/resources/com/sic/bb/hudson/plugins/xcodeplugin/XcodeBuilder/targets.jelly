@@ -1,6 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/xcodeplugin/XcodeBuilder/lib">	
 	
-	<st:contentType value="text/html;charset=UTF-8" />
+	<st:contentType value="text/html; charset=UTF-8" />
+	
 	<j:new var="h" className="hudson.Functions" />
 	<j:set var="rootURL" value="${request.contextPath}" />
 	<j:set var="resURL"  value="${rootURL}${h.resourcePath}" />
