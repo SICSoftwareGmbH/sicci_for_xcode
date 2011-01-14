@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -31,16 +30,16 @@ public class XcodebuildParser {
 		if(this.workspaceTemp != null && this.workspaceTemp.contains(workspace))
 			this.workspaceTemp = null;
 	}
-	
-	public String[] getBuildConfigurations(String workspace) {
+    
+	public String[] getBuildConfigurations(FilePath workspace) {
     	return parseXcodebuildList(workspace, "Build Configurations:");
     }
     
-    public String[] getBuildTargets(String workspace) {
+    public String[] getBuildTargets(FilePath workspace) {
     	return parseXcodebuildList(workspace, "Targets:");
     }
     
-    public String[] getAvailableSdks(String workspace) {
+    public String[] getAvailableSdks(FilePath workspace) {
 		ArrayList<String> sdks = new ArrayList<String>();
 		
 		for(String sdk: callXcodebuild(workspace,"-showsdks").toString().split("\n")) {
@@ -53,7 +52,7 @@ public class XcodebuildParser {
 		return (String[]) sdks.toArray(new String[sdks.size()]);
     }
     
-    private String[] parseXcodebuildList(String workspace, String arg) {
+    private String[] parseXcodebuildList(FilePath workspace, String arg) {
 		ArrayList<String> items = new ArrayList<String>();
 		boolean found = false;
 		
@@ -73,13 +72,14 @@ public class XcodebuildParser {
 		return (String[]) items.toArray(new String[items.size()]);
     }
     
-    private String callXcodebuild(String workspace, String arg) {
+    private String callXcodebuild(FilePath workspace, String arg) {
+    	// TODO workspace.toString() will be called (deprecated)
     	if(this.workspaceTemp != null && this.workspaceTemp.equals(workspace + arg))
     		return this.xcodebuildOutputTemp;
     	else
     		this.workspaceTemp = workspace + arg;
     	
-    	FilePath file = new FilePath(new File(new String()));
+    	FilePath file = new FilePath(workspace,new String());
     	ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     	
     	try {

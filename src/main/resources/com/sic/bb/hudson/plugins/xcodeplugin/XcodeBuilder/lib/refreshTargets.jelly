@@ -1,9 +1,10 @@
 <j:jelly xmlns:j="jelly:core">
 	<script defer="defer">
-		function refreshTargets(id,url,projectDir) {
+		function refreshTargets(id,url,jobName,projectDir) {
 	        new Ajax.Request(url, {
 	        	method: 'post',
 	        	parameters: {
+	        		jobName: jobName,
 	        		projectDir: projectDir
 	        	},
 	        	onLoading: function() {

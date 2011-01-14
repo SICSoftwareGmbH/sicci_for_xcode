@@ -97,7 +97,7 @@ public class XcodeBuilder extends Builder {
     	return false;
     }
     
-    public String[] getProjectDirs(String workspace) {
+    public String[] getProjectDirs(FilePath workspace) {
     	int searchDepth = MIN_XCODE_PROJ_SEARCH_DEPTH - 1;
     	
     	try {
@@ -113,23 +113,26 @@ public class XcodeBuilder extends Builder {
     	return getDescriptor().getProjectDirs(workspace,searchDepth);
     }
     
-    public String[] availableSdks(String workspace) {
+    public String[] availableSdks(FilePath workspace) {
     	if(getProjectDir() != null)
-    		return getDescriptor().availableSdks(workspace + '/' + getProjectDir());
+    		// TODO child could contain slashes (right dir separator?)
+    		return getDescriptor().availableSdks(workspace.child(getProjectDir()));
     	
     	return getDescriptor().availableSdks(workspace);
     }
 
-    public String[] getBuildConfigurations(String workspace) {
+    public String[] getBuildConfigurations(FilePath workspace) {
     	if(getProjectDir() != null)
-    		return getDescriptor().getBuildConfigurations(workspace + '/' + getProjectDir());
+    		// TODO child could contain slashes (right dir separator?)
+    		return getDescriptor().getBuildConfigurations(workspace.child(getProjectDir()));
 
     	return getDescriptor().getBuildConfigurations(workspace);
     }
     
-    public String[] getBuildTargets(String workspace) {
+    public String[] getBuildTargets(FilePath workspace) {
     	if(getProjectDir() != null)
-    		return getDescriptor().getBuildTargets(workspace + '/' + getProjectDir());
+    		// TODO child could contain slashes (right dir separator?)
+    		return getDescriptor().getBuildTargets(workspace.child(getProjectDir()));
 
     	return getDescriptor().getBuildTargets(workspace);
     }
@@ -158,6 +161,7 @@ public class XcodeBuilder extends Builder {
         descr.getXcodebuildParser().setWorkspaceTemp(workspace.getParent().getName());
         
         if(getProjectDir() != null)
+    		// TODO child could contain slashes (right dir separator?)
 			workspace = workspace.child(getProjectDir());
         
         try {
@@ -214,6 +218,11 @@ public class XcodeBuilder extends Builder {
 			
 			// build
 			for(String toBuild: getToPerformStep("build",true)) {
+				
+				// TODO
+				launcher.launch().envs(envs).stdout(listener).pwd(workspace).
+					cmds("/usr/bin/security","unlock-keychain","-p","sicdev","/Users/sicdeveloper/Library/Keychains/login.keychain").join();
+				
 				int rcode = launcher.launch().envs(envs).stdout(listener).pwd(workspace).
 						cmds(createCmds(xcodebuild,toBuild,"build")).join();
 				
@@ -244,31 +253,35 @@ public class XcodeBuilder extends Builder {
 						continue;
 					}
 					
-		            for(FilePath app: buildDir.list(new AppDirFilter())) {
-		            	if(!app.getBaseName().equals(array[0]))
-		            		continue;
-		            	            	
-		            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
-		                
-		                if(ipa.exists())
-		                	ipa.delete();
-	
-		                FilePath payload = buildDir.child("Payload");
-		                
-		                if(payload.exists())
-		                	payload.deleteRecursive();
-		                
-		                payload.mkdirs();
-		                app.renameTo(payload.child(app.getName()));
-		                
-		                ZipArchiveOutputStream zipStream = new ZipArchiveOutputStream(ipa.write());
-		                zipDirectory(payload,"",zipStream);
-		                zipStream.close();
-		                
-		                payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
-		                
-		                payload.deleteRecursive();
-		            }
+					List<FilePath> apps = buildDir.list(new AppDirFilter());
+					
+					if(apps != null) {
+			            for(FilePath app: apps) {
+			            	if(!app.getBaseName().equals(array[0]))
+			            		continue;
+			            	            	
+			            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
+			                
+			                if(ipa.exists())
+			                	ipa.delete();
+		
+			                FilePath payload = buildDir.child("Payload");
+			                
+			                if(payload.exists())
+			                	payload.deleteRecursive();
+			                
+			                payload.mkdirs();
+			                app.renameTo(payload.child(app.getName()));
+			                
+			                ZipArchiveOutputStream zipStream = new ZipArchiveOutputStream(ipa.write());
+			                zipDirectory(payload,"",zipStream);
+			                zipStream.close();
+			                
+			                payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
+			                
+			                payload.deleteRecursive();
+			            }
+					}
 				}
 			}
 			
@@ -397,7 +410,9 @@ public class XcodeBuilder extends Builder {
     public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
     	private XcodebuildParser xcodebuildParser;
     	
-    	private String currentProjectDir;
+    	private Map<String,FilePath> projectWorkspaceMap;
+    	private FilePath currentProjectDir;
+    	
     	private String xcodebuild;
     	private String ipaFilenameTemplate;
         private boolean ipaFilenameTemplateGlobal;
@@ -413,6 +428,9 @@ public class XcodeBuilder extends Builder {
         	
         	if(this.xcodebuildParser == null)
             	this.xcodebuildParser = new XcodebuildParser(getXcodebuild());
+        	
+        	if(this.projectWorkspaceMap == null)
+        		this.projectWorkspaceMap = new HashMap<String,FilePath>();
         }
         
         public XcodebuildParser getXcodebuildParser() {
@@ -531,9 +549,9 @@ public class XcodeBuilder extends Builder {
         
         public boolean getIpaFilenameTemplateGlobal() {
         	return this.ipaFilenameTemplateGlobal;
-        } 
+        }
         
-        public String getProjectDir() {
+        public FilePath getProjectDir() {
         	return this.currentProjectDir;
         }
         
@@ -580,13 +598,23 @@ public class XcodeBuilder extends Builder {
         
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        	// TODO ugly workaround, because of exception is global page will be saved sometimes
+        	this.projectWorkspaceMap = null;
+        	
             req.bindJSON(this, formData);
             save();
+            
+            // TODO ugly workaround, because of exception is global page will be saved sometimes
+            this.projectWorkspaceMap = new HashMap<String,FilePath>();
+            
             return super.configure(req,formData);
         }
         
-        public void doAjaxTargets(StaplerRequest req, StaplerResponse rsp, @QueryParameter String projectDir) throws IOException, ServletException {
-        	this.currentProjectDir = projectDir;
+        public void doAjaxTargets(StaplerRequest req, StaplerResponse rsp, @QueryParameter String jobName, @QueryParameter String projectDir) throws IOException, ServletException {
+        	if(this.projectWorkspaceMap.containsKey(jobName))
+        		// TODO child could contain slashes (right dir separator?)
+        		this.currentProjectDir = this.projectWorkspaceMap.get(jobName).child(projectDir);
+        	
         	req.getView(this,'/' + XcodeBuilder.class.getName().replaceAll("\\.","\\/")  + "/targets.jelly").forward(req, rsp);
         }
         
@@ -645,8 +673,7 @@ public class XcodeBuilder extends Builder {
             return false;
         }
         
-
-        public String[] getProjectDirs(String workspace) {
+        public String[] getProjectDirs(FilePath workspace) {
         	if(this.xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJ_SEARCH_DEPTH 
         			|| this.xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJ_SEARCH_DEPTH)
         		return getProjectDirs(workspace, XcodeBuilder.DEFAULT_XCODE_PROJ_SEARCH_DEPTH);
@@ -654,61 +681,43 @@ public class XcodeBuilder extends Builder {
         	return getProjectDirs(workspace, this.xcodeProjSearchDepth);
         }
         
-        
-        public String[] getProjectDirs(String workspace, int searchDepth) {
-        	ArrayList<String> projectDirs = searchXcodeProjFiles(workspace, searchDepth);
-        	String[] projectDirsArray = new String[projectDirs.size()];
-        	
-        	for(int i = 0; i < projectDirs.size(); i++) {
-        		String path = projectDirs.get(i);
-        		
-        		projectDirsArray[i] = path.substring(workspace.length() + 1,path.length());
-        	}
-        	
-        	return projectDirsArray;
-        }
-        
-        private ArrayList<String> searchXcodeProjFiles(String workspace, int searchDepth) {
+        public String[] getProjectDirs(FilePath workspace, int searchDepth) { 	
         	ArrayList<String> projectDirs = new ArrayList<String>();
         	
-        	if(searchDepth <= 0)
-        		return projectDirs;
+        	if(workspace.isRemote())
+        		this.projectWorkspaceMap.put(workspace.getName(),workspace);
+        	else
+        		this.projectWorkspaceMap.put(workspace.getParent().getName(),workspace);
         	
-        	FilePath dir = new FilePath(new File(workspace));
-        	
-        	try {
-    			if(dir.list(new XcodeProjDirFilter()).size() != 0)
-    				projectDirs.add(workspace + '/');
-        		
-				for(FilePath path : dir.listDirectories())
-					if(!projectDirs.contains(workspace + '/' + path.getName()))
-						projectDirs.addAll(searchXcodeProjFiles(workspace + '/' + path.getName(), searchDepth - 1));
+			try {
+				projectDirs.addAll(workspace.act(new XcodeProjectSearchCallable(searchDepth)));
 			} catch (IOException e) {
 				// TODO
 			} catch (InterruptedException e) {
 				// TODO
 			}
 			
-			return projectDirs;
+        	String[] projectDirsArray = new String[projectDirs.size()];
+        	
+        	for(int i = 0; i < projectDirs.size(); i++) {
+        		String path = projectDirs.get(i);
+        		
+        		projectDirsArray[i] = path.substring(workspace.toString().length() + 1,path.length());
+        	}
+        	
+        	return projectDirsArray;
         }
         
-        public String[] getBuildConfigurations(String workspace) {
+        public String[] getBuildConfigurations(FilePath workspace) {
         	return this.xcodebuildParser.getBuildConfigurations(workspace);
         }
         
-        public String[] getBuildTargets(String workspace) {
+        public String[] getBuildTargets(FilePath workspace) {
         	return this.xcodebuildParser.getBuildTargets(workspace);
         }
         
-        public String[] availableSdks(String workspace) {
+        public String[] availableSdks(FilePath workspace) {
 			return this.xcodebuildParser.getAvailableSdks(workspace);
-        }
-        
-        @SuppressWarnings("serial")
-    	private final class XcodeProjDirFilter implements FileFilter,Serializable {
-            public boolean accept(File pathname) {
-                return pathname.isDirectory() && pathname.getName().endsWith(".xcodeproj");
-            }
         }
     }
     

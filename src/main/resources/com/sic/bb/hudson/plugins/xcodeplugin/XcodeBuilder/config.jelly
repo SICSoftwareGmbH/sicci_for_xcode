@@ -1,6 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/xcodeplugin/XcodeBuilder/lib">
+	
 	<j:set var="builder" value="${instance}" defaultValue="${descriptor}" />
-	<j:set var="workspace" value="${it.getSomeWorkspace().toString()}" />
+	<j:set var="workspace" value="${it.getSomeWorkspace()}" />
 
 	<j:choose>
 		<!-- something is missing -->
@@ -33,12 +34,13 @@
 						<select name="ProjectDir" field="ProjectDir" 
 								onChange="refreshTargets(	'targets',
 															'${rootURL}/builder/XcodeBuilder/ajaxTargets',
-															'${workspace}/' + ProjectDir.options[ProjectDir.selectedIndex].value)">
+															'${it.getName()}',
+															ProjectDir.options[ProjectDir.selectedIndex].value)">
 						
 						<j:set var="loop" value="0" />
 						<j:set var="currentProjectDir" value="${builder.getProjectDir()}" />
 						
-						<j:forEach items="${builder.getProjectDirs(workspace)}" var="projectDir">
+						<j:forEach items="${projectDirs}" var="projectDir">
 							<j:choose>
 								<j:when test="${empty(projectDir) and !empty(currentProjectDir)}">
 									<option value="">${%job root dir}</option>
@@ -52,7 +54,7 @@
 									<option value="${projectDir}">${projectDir}</option>
 									
 									<j:if test="${loop == 0 and (builder == descriptor or empty(currentProjectDir))}">
-										<j:set scope="parent" var="workspace" value="${workspace + '/' + projectDir}" />
+										<j:set scope="parent" var="workspace" value="${workspace.child(projectDir)}" />
 										<j:set var="loop" value="1" />
 									</j:if>
 								</j:when>

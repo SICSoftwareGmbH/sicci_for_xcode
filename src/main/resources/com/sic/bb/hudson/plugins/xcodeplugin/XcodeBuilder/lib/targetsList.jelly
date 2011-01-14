@@ -3,7 +3,7 @@
 	<j:set var="builder" value="${attrs.builder}" />
 	<j:set var="descriptor" value="${attrs.descriptor}" />
 	<j:set var="projectDir" value="${attrs.projectDir}" />
-
+		
 	<!-- Targets/Buildconfigurations -->
 	
 	<j:set var="targets" value="${builder.getBuildTargets(projectDir)}" />
