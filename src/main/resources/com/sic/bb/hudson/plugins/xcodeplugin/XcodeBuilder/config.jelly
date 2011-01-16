@@ -12,7 +12,7 @@
 			</xb:singleEntry>
 		</j:when>
 		
-		<j:when test="${!it.getSomeWorkspace().exists()}">
+		<j:when test="${!workspace.exists()}">
 			<xb:singleEntry mainStyle="padding:20px 0 0 10px;">
 				<span style="font-weight:bold;">${%check out scm}</span>
 			</xb:singleEntry>
@@ -69,7 +69,22 @@
 				</j:choose>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%ipa filename template}" help="help-ipatemplate.html" titleStyle="vertical-align:middle; padding:4px 0 0 14px;" mainStyle="padding:4px 0 0 5px;" helpStyle="padding:4px 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
+			<xb:singleEntry title="${%xcode project type}" help="help-xcodeprojecttype.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
+				<select name="XcodeProjectType" field="XcodeProjectType">
+					<j:forEach items="${descriptor.getXcodeProjectTypes()}" var="xcodeProjectType">
+						<j:choose>
+							<j:when test="${xcodeProjectType == builder.getXcodeProjectType()}">
+								<option value="${xcodeProjectType}" selected="selected">${xcodeProjectType}</option>
+							</j:when>
+							<j:otherwise>
+								<option value="${xcodeProjectType}">${xcodeProjectType}</option>
+							</j:otherwise>
+						</j:choose>
+					</j:forEach>
+				</select>
+			</xb:singleEntry>
+			
+			<xb:singleEntry title="${%ipa filename template}" help="help-ipatemplate.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getIpaFilenameTemplateGlobal()}">
 					<input name="IpaFilenameTemplate" type="text" value="${descriptor.getIpaFilenameTemplate()}" disabled="disabled" style="width:100%;" />
@@ -79,6 +94,19 @@
 				</j:otherwise>
 			</j:choose>
 			</xb:singleEntry>
+			
+			<xb:singleEntry title="${%xcode project search depth}" help="help-xcodeprojsearchdepth.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
+			<j:choose>
+				<j:when test="${descriptor.getXcodeProjSearchDepthGlobal()}">
+					<input name="XcodeProjSearchDepth" type="text" value="${descriptor.getXcodeProjSearchDepth()}" disabled="disabled" style="width:100%;" />
+				</j:when>
+				<j:otherwise>
+					<f:textbox field="XcodeProjSearchDepth" default="${descriptor.getXcodeProjSearchDepth()}" />
+				</j:otherwise>
+			</j:choose>
+			</xb:singleEntry>
+			
+			<!--
 			
 			<xb:singleEntry title="${%use xcode clean}" help="help-xcodeclean.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
@@ -91,16 +119,7 @@
 			</j:choose>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%xcode project search depth}" help="help-xcodeprojsearchdepth.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:4px 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
-			<j:choose>
-				<j:when test="${descriptor.getXcodeProjSearchDepthGlobal()}">
-					<input name="XcodeProjSearchDepth" type="text" value="${descriptor.getXcodeProjSearchDepth()}" disabled="disabled" style="width:100%;" />
-				</j:when>
-				<j:otherwise>
-					<f:textbox field="XcodeProjSearchDepth" default="${descriptor.getXcodeProjSearchDepth()}" />
-				</j:otherwise>
-			</j:choose>
-			</xb:singleEntry>
+			-->
 			
 			<j:if test="${noProjectDirs == null}">
 				<tr>
@@ -119,4 +138,5 @@
 	</j:choose>
 	
 	<xb:refreshTargets />
+	
 </j:jelly>

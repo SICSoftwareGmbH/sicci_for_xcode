@@ -1,4 +1,4 @@
-package com.sic.bb.hudson.plugins.xcodeplugin;
+package com.sic.bb.hudson.plugins.xcodeplugin.util;
 
 import hudson.os.PosixAPI;
 import hudson.Util;

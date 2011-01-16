@@ -3,8 +3,9 @@ package com.sic.bb.hudson.plugins.xcodeplugin.callables;
 import java.io.File;
 import java.io.IOException;
 
-import com.sic.bb.hudson.plugins.xcodeplugin.ExtendedFile;
 import com.sic.bb.hudson.plugins.xcodeplugin.filefilter.AppDirectoryFilter;
+import com.sic.bb.hudson.plugins.xcodeplugin.filefilter.IpaFileFilter;
+import com.sic.bb.hudson.plugins.xcodeplugin.util.ExtendedFile;
 
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
@@ -42,7 +43,7 @@ public class IpaPackagerCallable  implements FileCallable<Boolean> {
                 if(!appDir.renameTo(new File(ipaFileContents,app)))
                 	return false;
                 
-                ipaFileContents.zip(new File(buildDir,this.fileName));
+                ipaFileContents.zip(new File(buildDir,this.fileName + IpaFileFilter.FILE_ENDING));
                 
                 if(!movedAppDir.renameTo(appDir))
                 	return false;

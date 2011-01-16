@@ -3,11 +3,12 @@ package com.sic.bb.hudson.plugins.xcodeplugin;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import hudson.Extension;
+import hudson.model.Node;
 import hudson.model.Slave;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 
-public class XcodeUserNodeProperty extends NodeProperty<Slave> {
+public class XcodeUserNodeProperty extends NodeProperty<Node> {
 	private String username;
 	private String password;
 	

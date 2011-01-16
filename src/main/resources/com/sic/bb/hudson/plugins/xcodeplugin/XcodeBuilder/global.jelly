@@ -1,10 +1,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/xcodeplugin/XcodeBuilder/lib">
 	
 	<f:section title="${%xcode section title}">
-    	<xb:singleEntry title="${%xcodebuild path}" help="help-xcodebuild.html">
-    		<f:textbox field="xcodebuild" name="xcodebuild.xcodebuild" value="${descriptor.getXcodebuild()}" />
-    	</xb:singleEntry>
-    	
+	
     	<xb:multipleEntry title="${%xcode project search depth}" help="help-xcodeprojsearchdepth.html">
 			<td style="width:100%;">
 				<f:textbox field="xcodeProjSearchDepth" name="xcodebuild.xcodeProjSearchDepth" value="${descriptor.getXcodeProjSearchDepth()}" />
@@ -15,14 +12,14 @@
 			</td>
     	</xb:multipleEntry>
     	
-    	<xb:multipleEntry title="${%use xcode clean}" help="help-xcodeclean.html">
-			<td style="width:0%;">
-				<f:checkbox name="xcodebuild.xcodeClean" checked="${descriptor.getXcodeClean()}" />
-			</td>
-			<td style="width:100%; padding:0 0 0 10px; margin:0px;">
-				${%overwrite project settings}:
-				<f:checkbox name="xcodebuild.xcodeCleanGlobal" checked="${descriptor.getXcodeCleanGlobal()}" />	
-			</td>
+    	<xb:multipleEntry title="${%ipa filename template}" help="help-ipatemplate.html">
+    		<td style="width:100%;">
+    			<f:textbox field="ipaFilenameTemplate" name="xcodebuild.ipaFilenameTemplate" value="${descriptor.getIpaFilenameTemplate()}" />
+    		</td>
+    		<td style="width:0%; padding:0 0 0 10px; margin:0px; white-space:nowrap;">
+    			${%overwrite project settings}:
+    			<f:checkbox name="xcodebuild.ipaFilenameTemplateGlobal" checked="${descriptor.getIpaFilenameTemplateGlobal()}" />
+    		</td>
     	</xb:multipleEntry>
     	
     	<xb:multipleEntry title="${%clean before build}" help="help-cleanbeforebuild.html">
@@ -45,15 +42,14 @@
     		</td>
     	</xb:multipleEntry>
     	
-    	<xb:multipleEntry title="${%ipa filename template}" help="help-ipatemplate.html">
-    		<td style="width:100%;">
-    			<f:textbox field="ipaFilenameTemplate" name="xcodebuild.ipaFilenameTemplate" value="${descriptor.getIpaFilenameTemplate()}" />
-    		</td>
-    		<td style="width:0%; padding:0 0 0 10px; margin:0px; white-space:nowrap;">
-    			${%overwrite project settings}:
-    			<f:checkbox name="xcodebuild.ipaFilenameTemplateGlobal" checked="${descriptor.getIpaFilenameTemplateGlobal()}" />
-    		</td>
-    	</xb:multipleEntry>
+    	<!--
+		
+    	<xb:singleEntry title="${%xcodebuild path}" help="help-xcodebuild.html">
+    		<f:textbox field="xcodebuild" name="xcodebuild.xcodebuild" value="${descriptor.getXcodebuild()}" />
+    	</xb:singleEntry>
+    	
+    	-->
+    	
 	</f:section>
 	
 </j:jelly>
