@@ -7,7 +7,9 @@ import hudson.Launcher;
 import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Computer;
 import hudson.model.FreeStyleProject;
+import hudson.model.Slave;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
@@ -31,12 +33,12 @@ import javax.servlet.ServletException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+
+import com.sic.bb.hudson.plugins.xcodeplugin.callables.IpaPackagerCallable;
+import com.sic.bb.hudson.plugins.xcodeplugin.callables.XcodeProjectSearchCallable;
 
 public class XcodeBuilder extends Builder {
 	private final static int BUILD_OK = 0;
@@ -48,8 +50,10 @@ public class XcodeBuilder extends Builder {
 	private final static String DEFAULT_IPA_FILENAME_TEMPLATE = "<TARGET>_<CONFIG>_b<BUILD>_<DATETIME>";
 	
     private final Map<String,String> data;
+    
+    private String username;
+    private String password;
 
-    @DataBoundConstructor
     public XcodeBuilder(Map<String,String> data) {
     	this.data = data;
     }
@@ -102,9 +106,7 @@ public class XcodeBuilder extends Builder {
     	
     	try {
     		searchDepth = Integer.parseInt(getXcodeProjSearchDepth());
-    	} catch(NumberFormatException e) {
-    		// TODO
-    	}
+    	} catch(NumberFormatException e) {}
     	
     	if(searchDepth < MIN_XCODE_PROJ_SEARCH_DEPTH || searchDepth > MAX_XCODE_PROJ_SEARCH_DEPTH
     			|| getDescriptor().getXcodeProjSearchDepthGlobal())
@@ -142,13 +144,45 @@ public class XcodeBuilder extends Builder {
         return (XcodeBuilderDescriptor) super.getDescriptor();
     }
     
-    /*
     @Override
     public boolean prebuild(AbstractBuild<?,?> build, BuildListener listener) {
-    	listener.getLogger().println("FAILED PREBUILD");
-    	return false;
+		Computer curComputer = Computer.currentComputer();
+		
+		if(!curComputer.getNode().createLauncher(listener).isUnix()) {
+			// TODO see also XcodebuildParser, there's a launcher too
+			listener.fatalError("xcode runs only on mac os x");
+			return false;
+		}
+		
+		if(curComputer.getNode() instanceof Slave) {
+			XcodeUserNodeProperty property = curComputer.getNode().getNodeProperties().get(XcodeUserNodeProperty.class);
+			
+			if(property == null) {
+				// TODO
+				listener.fatalError("xcode preferences not set");
+				return false;
+			}
+			
+			this.username = property.getUsername();
+			this.password = property.getPassword();
+			
+			if(this.username == null || this.username.isEmpty()) {
+				// TODO
+				listener.fatalError("xcode username not set");
+				return false;
+			}
+			
+			if(this.password == null || this.password.isEmpty()) {
+				// TODO
+				listener.fatalError("xcode password not set");
+				return false;
+			}
+		} else {
+			// TODO 
+		}
+		
+    	return true;
     }
-    */
     
     @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) {
@@ -218,7 +252,6 @@ public class XcodeBuilder extends Builder {
 			
 			// build
 			for(String toBuild: getToPerformStep("build",true)) {
-				
 				// TODO
 				launcher.launch().envs(envs).stdout(listener).pwd(workspace).
 					cmds("/usr/bin/security","unlock-keychain","-p","sicdev","/Users/sicdeveloper/Library/Keychains/login.keychain").join();
@@ -230,8 +263,7 @@ public class XcodeBuilder extends Builder {
 					blackList.add(toBuild);
 				
 				returnCodes.add(rcode);
-			}
-			
+			}		
 			
 			// create ipa
 			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
@@ -244,6 +276,7 @@ public class XcodeBuilder extends Builder {
 					FilePath buildDir = workspace.child("build");
 					String[] array = toCreateIPA.split("\\|");
 					
+					// TODO hardcoded directories are bad!!
 					if(buildDir.child(array[1]).isDirectory())
 						buildDir = buildDir.child(array[1]);
 					else if(buildDir.child(array[1] + "-iphoneos").isDirectory())
@@ -253,35 +286,10 @@ public class XcodeBuilder extends Builder {
 						continue;
 					}
 					
-					List<FilePath> apps = buildDir.list(new AppDirFilter());
-					
-					if(apps != null) {
-			            for(FilePath app: apps) {
-			            	if(!app.getBaseName().equals(array[0]))
-			            		continue;
-			            	            	
-			            	FilePath ipa = buildDir.child(createIPAFilename(build, app.getBaseName(), array[1]));
-			                
-			                if(ipa.exists())
-			                	ipa.delete();
-		
-			                FilePath payload = buildDir.child("Payload");
-			                
-			                if(payload.exists())
-			                	payload.deleteRecursive();
-			                
-			                payload.mkdirs();
-			                app.renameTo(payload.child(app.getName()));
-			                
-			                ZipArchiveOutputStream zipStream = new ZipArchiveOutputStream(ipa.write());
-			                zipDirectory(payload,"",zipStream);
-			                zipStream.close();
-			                
-			                payload.child(app.getName()).renameTo(buildDir.child(app.getName()));
-			                
-			                payload.deleteRecursive();
-			            }
-					}
+					if(buildDir.act(new IpaPackagerCallable(array[0], createFilename(build, array[0], array[1]))))
+						returnCodes.add(BUILD_OK);
+					else
+						returnCodes.add(BUILD_ERROR);
 				}
 			}
 			
@@ -289,12 +297,8 @@ public class XcodeBuilder extends Builder {
 				return false;
 			
 			return true;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO
-			listener.getLogger().println("IOException:" + e.getMessage());
-		} catch (InterruptedException e) {
-			// TODO
-			listener.getLogger().println("InterruptedException: " + e.getMessage());
 		}
         
         return false;
@@ -333,70 +337,33 @@ public class XcodeBuilder extends Builder {
 		return cmds;
     }
     
-    private static void zipDirectory(FilePath directory, String path, ZipArchiveOutputStream zipStream) {
-    	if(path != null && !path.isEmpty())
-    		path += '/';
-    		
-		try {
-			// could be a problem if the file is on a remote host, so the relativ path is wrong on this machine
-	    	ZipArchiveEntry zipEntry = new ZipArchiveEntry(new File(directory.toURI()),path + directory.getName());
-	    	zipEntry.setUnixMode(directory.mode());
-	    	zipStream.putArchiveEntry(zipEntry);
-	    	
-	    	if(!directory.isDirectory()) {
-	    		directory.copyTo(zipStream);
-	    		zipStream.closeArchiveEntry();
-			} else {
-				zipStream.closeArchiveEntry();
-				
-		    	List<FilePath> entries = directory.list();
-		    		
-		    	if(entries != null)
-		    		for(FilePath entry: entries)
-		    			zipDirectory(entry,path + directory.getName(),zipStream);
-			}
-		} catch(InterruptedException e) {
-			// TODO
-		} catch(IOException e) {
-			// TODO
-		}
-    }
-    
-    private String createIPAFilename(AbstractBuild<?,?> build, String targetName, String configName) {
-    	String ipaFilename;
+    private String createFilename(AbstractBuild<?,?> build, String targetName, String configName) {
+    	String filename;
     	
     	if(getDescriptor().ipaFilenameTemplateGlobal)
-    		ipaFilename = getDescriptor().getIpaFilenameTemplate();
+    		filename = getDescriptor().getIpaFilenameTemplate();
     	else
-    		ipaFilename = getIpaFilenameTemplate();
+    		filename = getIpaFilenameTemplate();
     	
-    	if(ipaFilename == null || ipaFilename.isEmpty())
-    		ipaFilename = DEFAULT_IPA_FILENAME_TEMPLATE;
+    	if(filename == null || filename.isEmpty())
+    		filename = DEFAULT_IPA_FILENAME_TEMPLATE;
     	
     	Date buildTimeStamp = build.getTimestamp().getTime();
     	
-    	ipaFilename = ipaFilename.replaceAll("<SECOND>",new SimpleDateFormat("ss").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<MINUTE>",new SimpleDateFormat("mm").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<HOUR>",new SimpleDateFormat("HH").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<DAY>",new SimpleDateFormat("dd").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<MONTH>",new SimpleDateFormat("MM").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<YEAR>",new SimpleDateFormat("yyyy").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<TIME>",new SimpleDateFormat("HH_mm_ss").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<DATE>",new SimpleDateFormat("yyyy_MM_dd").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<DATETIME>",new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(buildTimeStamp));
-    	ipaFilename = ipaFilename.replaceAll("<BUILD>",String.valueOf(build.getNumber()));
-    	ipaFilename = ipaFilename.replaceAll("<TARGET>",targetName);
-    	ipaFilename = ipaFilename.replaceAll("<CONFIG>",configName);
-    	ipaFilename += ".ipa";
+    	filename = filename.replaceAll("<SECOND>",new SimpleDateFormat("ss").format(buildTimeStamp));
+    	filename = filename.replaceAll("<MINUTE>",new SimpleDateFormat("mm").format(buildTimeStamp));
+    	filename = filename.replaceAll("<HOUR>",new SimpleDateFormat("HH").format(buildTimeStamp));
+    	filename = filename.replaceAll("<DAY>",new SimpleDateFormat("dd").format(buildTimeStamp));
+    	filename = filename.replaceAll("<MONTH>",new SimpleDateFormat("MM").format(buildTimeStamp));
+    	filename = filename.replaceAll("<YEAR>",new SimpleDateFormat("yyyy").format(buildTimeStamp));
+    	filename = filename.replaceAll("<TIME>",new SimpleDateFormat("HH_mm_ss").format(buildTimeStamp));
+    	filename = filename.replaceAll("<DATE>",new SimpleDateFormat("yyyy_MM_dd").format(buildTimeStamp));
+    	filename = filename.replaceAll("<DATETIME>",new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(buildTimeStamp));
+    	filename = filename.replaceAll("<BUILD>",String.valueOf(build.getNumber()));
+    	filename = filename.replaceAll("<TARGET>",targetName);
+    	filename = filename.replaceAll("<CONFIG>",configName);
     	
-    	return ipaFilename;
-    }
-    
-    @SuppressWarnings("serial")
-	private final class AppDirFilter implements FileFilter,Serializable {
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".app");
-        }
+    	return filename;
     }
     
     @SuppressWarnings("serial")
@@ -408,8 +375,7 @@ public class XcodeBuilder extends Builder {
     
     @Extension
     public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
-    	private XcodebuildParser xcodebuildParser;
-    	
+    	private XcodebuildParser xcodebuildParser; 	
     	private Map<String,FilePath> projectWorkspaceMap;
     	private FilePath currentProjectDir;
     	
@@ -449,8 +415,6 @@ public class XcodeBuilder extends Builder {
         		this.xcodebuild = XcodeBuilder.DEFAULT_XCODEBUILD_PATH;
         	else
         		this.xcodebuild = xcodebuild;
-        	
-        	this.xcodebuildParser.setXcodebuild(xcodebuild);
         }
         
         public void setXcodeClean(boolean xcodeClean) {
@@ -598,14 +562,16 @@ public class XcodeBuilder extends Builder {
         
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-        	// TODO ugly workaround, because of exception is global page will be saved sometimes
+        	// we don't want to persist temporary data
         	this.projectWorkspaceMap = null;
+        	this.currentProjectDir = null;
+        	this.xcodebuildParser = null;
         	
             req.bindJSON(this, formData);
             save();
             
-            // TODO ugly workaround, because of exception is global page will be saved sometimes
             this.projectWorkspaceMap = new HashMap<String,FilePath>();
+            this.xcodebuildParser = new XcodebuildParser(getXcodebuild());
             
             return super.configure(req,formData);
         }
@@ -627,7 +593,7 @@ public class XcodeBuilder extends Builder {
         		
         		if(!xcodebuild.exists() || xcodebuild.isDirectory())
         			return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_fileNotExists());
-        	} catch(InterruptedException e) {
+        	} catch(Exception e) {
         		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_fileNotExists());
         	}
         	
@@ -666,11 +632,8 @@ public class XcodeBuilder extends Builder {
         }
 
         @SuppressWarnings("rawtypes")
-		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-        	if(aClass == FreeStyleProject.class)
-        		return true;
-        	
-            return false;
+		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+        	return jobType == FreeStyleProject.class;
         }
         
         public String[] getProjectDirs(FilePath workspace) {
@@ -691,9 +654,7 @@ public class XcodeBuilder extends Builder {
         	
 			try {
 				projectDirs.addAll(workspace.act(new XcodeProjectSearchCallable(searchDepth)));
-			} catch (IOException e) {
-				// TODO
-			} catch (InterruptedException e) {
+			} catch (Exception e) {
 				// TODO
 			}
 			
@@ -702,6 +663,7 @@ public class XcodeBuilder extends Builder {
         	for(int i = 0; i < projectDirs.size(); i++) {
         		String path = projectDirs.get(i);
         		
+        		// TODO don't use this deprecated method
         		projectDirsArray[i] = path.substring(workspace.toString().length() + 1,path.length());
         	}
         	
@@ -720,20 +682,4 @@ public class XcodeBuilder extends Builder {
 			return this.xcodebuildParser.getAvailableSdks(workspace);
         }
     }
-    
-    /*
-    @SuppressWarnings("serial")
-	private final class DsymDirFilter implements FileFilter,Serializable {
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".app.dSYM");
-        }
-    }
-    
-    @SuppressWarnings("serial")
-	private final class IpaFileFilter implements FileFilter,Serializable {
-        public boolean accept(File pathname) {
-            return pathname.isDirectory() && pathname.getName().endsWith(".ipa");
-        }
-    }
-    */
 }

@@ -1,0 +1,13 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">
+	<td colspan="2"></td>
+	<td>
+	<table width="100%">
+		<f:entry title="${%username}" help="${rootURL}/plugin/xcodeplugin/help-username.html">
+	    	<f:textbox field="username" name="xcodeusernodeproperty.username" />
+		</f:entry>
+		<f:entry title="${%password}" help="${rootURL}/plugin/xcodeplugin/help-password.html">
+	    	<f:password field="password" name="xcodeusernodeproperty.password" />
+		</f:entry>
+	</table>
+	</td>
+</j:jelly>

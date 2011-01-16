@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-public class XcodebuildParser {
+public final class XcodebuildParser {
 	private final static Pattern availableSdksPattern = Pattern.compile("^.*(?:-sdk\\s*)(\\S+)\\s*$");
 	private final static Pattern parseXcodeBuildListPattern1 = Pattern.compile("^\\s*((?:[^(\\s]+\\s*)+).*$");
 	private final static Pattern parseXcodeBuildListPattern2 = Pattern.compile("^\\s*((?:\\S+\\s*\\S+)+)\\s*$");
@@ -42,7 +42,7 @@ public class XcodebuildParser {
     public String[] getAvailableSdks(FilePath workspace) {
 		ArrayList<String> sdks = new ArrayList<String>();
 		
-		for(String sdk: callXcodebuild(workspace,"-showsdks").toString().split("\n")) {
+		for(String sdk: callXcodebuild(workspace,"-showsdks").split("\n")) {
 			if(!sdk.contains("-sdk"))
 				continue;
 			
@@ -56,7 +56,7 @@ public class XcodebuildParser {
 		ArrayList<String> items = new ArrayList<String>();
 		boolean found = false;
 		
-		for(String item: callXcodebuild(workspace,"-list").toString().split("\n")) {
+		for(String item: callXcodebuild(workspace,"-list").split("\n")) {
 			if(item.contains(arg)) {
 				found = true;
 				continue;
@@ -84,7 +84,9 @@ public class XcodebuildParser {
     	
     	try {
     		Launcher launcher = file.createLauncher(new StreamTaskListener(new ByteArrayOutputStream()));
-    		launcher.launch().stdout(stdout).pwd(workspace).cmds(this.xcodebuild, arg).join();
+    		
+    		if(launcher.isUnix())
+    			launcher.launch().stdout(stdout).pwd(workspace).cmds(this.xcodebuild, arg).join();
 		} catch (IOException e) {
 			// TODO
 			return "IOException: " + e.getMessage();
