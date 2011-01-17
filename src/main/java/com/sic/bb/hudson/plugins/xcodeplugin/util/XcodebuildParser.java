@@ -5,7 +5,6 @@ import hudson.Launcher;
 import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 

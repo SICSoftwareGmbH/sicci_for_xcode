@@ -12,13 +12,13 @@
 			</td>
     	</xb:multipleEntry>
     	
-    	<xb:multipleEntry title="${%ipa filename template}" help="help-ipatemplate.html">
+    	<xb:multipleEntry title="${%filename template}" help="help-filenametemplate.html">
     		<td style="width:100%;">
-    			<f:textbox field="ipaFilenameTemplate" name="xcodebuild.ipaFilenameTemplate" value="${descriptor.getIpaFilenameTemplate()}" />
+    			<f:textbox field="filenameTemplate" name="xcodebuild.filenameTemplate" value="${descriptor.getFilenameTemplate()}" />
     		</td>
     		<td style="width:0%; padding:0 0 0 10px; margin:0px; white-space:nowrap;">
     			${%overwrite project settings}:
-    			<f:checkbox name="xcodebuild.ipaFilenameTemplateGlobal" checked="${descriptor.getIpaFilenameTemplateGlobal()}" />
+    			<f:checkbox name="xcodebuild.filenameTemplateGlobal" checked="${descriptor.getFilenameTemplateGlobal()}" />
     		</td>
     	</xb:multipleEntry>
     	
@@ -29,6 +29,16 @@
     		<td style="width:100%; padding:0 0 0 10px; margin:0px;">
 				${%overwrite project settings}:
 				<f:checkbox name="xcodebuild.cleanBeforeBuildGlobal" checked="${descriptor.getCleanBeforeBuildGlobal()}" />	 			
+    		</td>
+    	</xb:multipleEntry>
+    	
+    	<xb:multipleEntry title="${%archive app}" help="help-archiveapp.html">
+    		<td style="width:0%;">
+    			<f:checkbox name="xcodebuild.archiveApp" checked="${descriptor.getArchiveApp()}" />
+    		</td>
+    		<td style="width:100%; padding:0 0 0 10px; margin:0px;">
+    			${%overwrite project settings}:
+    			<f:checkbox name="xcodebuild.archiveAppGlobal" checked="${descriptor.getArchiveAppGlobal()}" />
     		</td>
     	</xb:multipleEntry>
     	

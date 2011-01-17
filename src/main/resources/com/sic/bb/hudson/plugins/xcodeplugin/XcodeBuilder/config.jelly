@@ -84,13 +84,13 @@
 				</select>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%ipa filename template}" help="help-ipatemplate.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
+			<xb:singleEntry title="${%filename template}" help="help-filenametemplate.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
-				<j:when test="${descriptor.getIpaFilenameTemplateGlobal()}">
-					<input name="IpaFilenameTemplate" type="text" value="${descriptor.getIpaFilenameTemplate()}" disabled="disabled" style="width:100%;" />
+				<j:when test="${descriptor.getFilenameTemplateGlobal()}">
+					<input name="FilenameTemplate" type="text" value="${descriptor.getFilenameTemplate()}" disabled="disabled" style="width:100%;" />
 				</j:when>
 				<j:otherwise>
-					<f:textbox field="IpaFilenameTemplate" default="${descriptor.getIpaFilenameTemplate()}" />
+					<f:textbox field="FilenameTemplate" default="${descriptor.getFilenameTemplate()}" />
 				</j:otherwise>
 			</j:choose>
 			</xb:singleEntry>

@@ -14,7 +14,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
@@ -36,6 +35,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
+import com.sic.bb.hudson.plugins.xcodeplugin.callables.AppArchiverCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.CheckXcodeInstallationCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.IpaPackagerCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.XcodeProjectSearchCallable;
@@ -74,11 +74,11 @@ public class XcodeBuilder extends Builder {
     	return this.data.get("XcodeProjectType");
     }
     
-    public String getIpaFilenameTemplate() {
-    	if(!this.data.containsKey("IpaFilenameTemplate"))
+    public String getFilenameTemplate() {
+    	if(!this.data.containsKey("FilenameTemplate"))
     		return null;
     	
-    	return this.data.get("IpaFilenameTemplate");
+    	return this.data.get("FilenameTemplate");
     }
     
     public String getXcodeProjSearchDepth() {
@@ -227,16 +227,14 @@ public class XcodeBuilder extends Builder {
 			// <cleanup>
 			
 			if(!(descr.getCleanBeforeBuildGlobal() && !descr.getCleanBeforeBuild())) {
-				for(String toClean: getToPerformStep("clean",(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
+				for(String toClean: getToPerformStep("clean_before_build",(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
 					returnCodes.add(launcher.launch().envs(envs).stdout(listener).pwd(workspace).
 							cmds(createCmds(toClean,"clean")).join());
 			}
 			
 			// </cleanup>
 			
-			
 			// <build>
-			
 
 			if(this.currentUsername != null && !this.currentUsername.isEmpty() && 
 					this.currentPassword != null && !this.currentPassword.isEmpty()) {
@@ -274,21 +272,22 @@ public class XcodeBuilder extends Builder {
 					return false;
 				}
 			}
-
 			
 			// </build>
 			
-			// <create ipa>
 			
-			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
-				for(String toCreateIPA: getToPerformStep("ipa",(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
-					if(blackList.contains(toCreateIPA)) {
+			FilePath buildDir = workspace.child("build");
+			
+			// <archive app>
+			
+			if(!(descr.getArchiveAppGlobal() && !descr.getArchiveApp())) {	
+				for(String toArchiveApp: getToPerformStep("archive_app",(descr.getArchiveAppGlobal() && descr.getArchiveApp()))) {
+					if(blackList.contains(toArchiveApp)) {
 						returnCodes.add(RETURN_ERROR);
 						continue;
 					}
 						
-					FilePath buildDir = workspace.child("build");
-					String[] array = toCreateIPA.split("\\|");
+					String[] array = toArchiveApp.split("\\|");
 					
 					String configBuildDirName = XcodeProjectType.getProjectBuildDirName(getXcodeProjectType(), array[1]);
 					
@@ -297,9 +296,38 @@ public class XcodeBuilder extends Builder {
 						continue;
 					}
 					
-					buildDir = buildDir.child(configBuildDirName);
+					FilePath tempBuildDir = buildDir.child(configBuildDirName);
+
+					if(tempBuildDir.act(new AppArchiverCallable(array[0], createFilename(build, array[0], array[1]))))
+						returnCodes.add(RETURN_OK);
+					else
+						returnCodes.add(RETURN_ERROR);
+				}
+			}
+			
+			// </archive app>
+			
+			// <create ipa>
+			
+			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
+				for(String toCreateIpa: getToPerformStep("create_ipa",(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
+					if(blackList.contains(toCreateIpa)) {
+						returnCodes.add(RETURN_ERROR);
+						continue;
+					}
+						
+					String[] array = toCreateIpa.split("\\|");
 					
-					if(buildDir.act(new IpaPackagerCallable(array[0], createFilename(build, array[0], array[1]))))
+					String configBuildDirName = XcodeProjectType.getProjectBuildDirName(getXcodeProjectType(), array[1]);
+					
+					if(configBuildDirName == null || !buildDir.child(configBuildDirName).isDirectory()) {
+						returnCodes.add(RETURN_ERROR);
+						continue;
+					}
+					
+					FilePath tempBuildDir = buildDir.child(configBuildDirName);
+					
+					if(tempBuildDir.act(new IpaPackagerCallable(array[0], createFilename(build, array[0], array[1]))))
 						returnCodes.add(RETURN_OK);
 					else
 						returnCodes.add(RETURN_ERROR);
@@ -355,10 +383,10 @@ public class XcodeBuilder extends Builder {
     private String createFilename(AbstractBuild<?,?> build, String targetName, String configurationName) {
     	String filename;
     	
-    	if(getDescriptor().ipaFilenameTemplateGlobal)
-    		filename = getDescriptor().getIpaFilenameTemplate();
+    	if(getDescriptor().filenameTemplateGlobal)
+    		filename = getDescriptor().getFilenameTemplate();
     	else
-    		filename = getIpaFilenameTemplate();
+    		filename = getFilenameTemplate();
     	
     	if(filename == null || filename.isEmpty())
     		filename = DEFAULT_FILENAME_TEMPLATE;
@@ -387,11 +415,12 @@ public class XcodeBuilder extends Builder {
     	private Map<String,FilePath> projectWorkspaceMap;
     	private FilePath currentProjectDir;
     	
-    	private String ipaFilenameTemplate;
-        private boolean ipaFilenameTemplateGlobal;
+    	private String filenameTemplate;
+        private boolean filenameTemplateGlobal;
         private int xcodeProjSearchDepth;
         private boolean xcodeProjSearchDepthGlobal;
         private boolean cleanBeforeBuild, cleanBeforeBuildGlobal;
+        private boolean archiveApp, archiveAppGlobal;
         private boolean createIpa, createIpaGlobal;
         
         public XcodeBuilderDescriptor() {
@@ -412,6 +441,27 @@ public class XcodeBuilder extends Builder {
         @Override
         public XcodeBuilder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
         	return new XcodeBuilder(collectFormData(formData));
+        }
+        
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
+        	// we don't want to persist temporary data
+        	this.projectWorkspaceMap = null;
+        	this.currentProjectDir = null;
+        	this.xcodebuildParser = null;
+        	
+            req.bindJSON(this, formData);
+            save();
+            
+            this.projectWorkspaceMap = new HashMap<String,FilePath>();
+            this.xcodebuildParser = new XcodebuildParser();
+            
+            return super.configure(req,formData);
+        }
+        
+        @SuppressWarnings("rawtypes")
+		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+        	return jobType == FreeStyleProject.class;
         }
         
         @SuppressWarnings("unchecked")
@@ -436,22 +486,6 @@ public class XcodeBuilder extends Builder {
         	}
         	
         	return formDataMap;
-        }
-        
-        @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-        	// we don't want to persist temporary data
-        	this.projectWorkspaceMap = null;
-        	this.currentProjectDir = null;
-        	this.xcodebuildParser = null;
-        	
-            req.bindJSON(this, formData);
-            save();
-            
-            this.projectWorkspaceMap = new HashMap<String,FilePath>();
-            this.xcodebuildParser = new XcodebuildParser();
-            
-            return super.configure(req,formData);
         }
         
         public XcodebuildParser getXcodebuildParser() {
@@ -502,6 +536,22 @@ public class XcodeBuilder extends Builder {
             return this.cleanBeforeBuildGlobal;
         }
         
+        public void setArchiveApp(boolean archiveApp) {
+        	this.archiveApp = archiveApp;
+        }
+        
+        public boolean getArchiveApp() {
+            return this.archiveApp;
+        }
+        
+        public void setArchiveAppGlobal(boolean archiveAppGlobal) {
+        	this.archiveAppGlobal = archiveAppGlobal;
+        }
+        
+        public boolean getArchiveAppGlobal() {
+            return this.archiveAppGlobal;
+        }
+        
         public void setCreateIpa(boolean createIpa) {
         	this.createIpa = createIpa;
         }
@@ -518,26 +568,26 @@ public class XcodeBuilder extends Builder {
             return this.createIpaGlobal;
         }
         
-        public void setIpaFilenameTemplate(String ipaFilenameTemplate) {
-        	if(ipaFilenameTemplate == null || ipaFilenameTemplate.isEmpty())
-        		this.ipaFilenameTemplate = XcodeBuilder.DEFAULT_FILENAME_TEMPLATE;
+        public void setFilenameTemplate(String filenameTemplate) {
+        	if(filenameTemplate == null || filenameTemplate.isEmpty())
+        		this.filenameTemplate = XcodeBuilder.DEFAULT_FILENAME_TEMPLATE;
         	else
-        		this.ipaFilenameTemplate = ipaFilenameTemplate;
+        		this.filenameTemplate = filenameTemplate;
         }
         
-        public String getIpaFilenameTemplate() {
-        	if(this.ipaFilenameTemplate == null || this.ipaFilenameTemplate.isEmpty())
+        public String getFilenameTemplate() {
+        	if(this.filenameTemplate == null || this.filenameTemplate.isEmpty())
         		return XcodeBuilder.DEFAULT_FILENAME_TEMPLATE;
         	
-        	return this.ipaFilenameTemplate;
+        	return this.filenameTemplate;
         }
         
-        public void setIpaFilenameTemplateGlobal(boolean ipaFilenameTemplateGlobal) {
-        	this.ipaFilenameTemplateGlobal = ipaFilenameTemplateGlobal;
+        public void setFilenameTemplateGlobal(boolean filenameTemplateGlobal) {
+        	this.filenameTemplateGlobal = filenameTemplateGlobal;
         }
         
-        public boolean getIpaFilenameTemplateGlobal() {
-        	return this.ipaFilenameTemplateGlobal;
+        public boolean getFilenameTemplateGlobal() {
+        	return this.filenameTemplateGlobal;
         }
         
         public FilePath getProjectDir() {
@@ -571,25 +621,6 @@ public class XcodeBuilder extends Builder {
         	this.currentProjectDir = null;
         }
         
-        public FormValidation doCheckXcodebuild(@QueryParameter String value) throws IOException, ServletException {
-        	if(value.isEmpty())
-        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_emptyValue());
-        	
-        	try {
-        		FilePath xcodebuild = new FilePath(new File(value));
-        		
-        		if(!xcodebuild.exists() || xcodebuild.isDirectory())
-        			return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_fileNotExists());
-        	} catch(Exception e) {
-        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_fileNotExists());
-        	}
-        	
-            if(!value.contains("xcodebuild"))
-            	return FormValidation.warningWithMarkup(Messages.XcodeBuilderDescriptor_doCheckXcodebuild_valueNotContainingXcodebuild());
-            
-            return FormValidation.ok();
-        }
-        
         public FormValidation doCheckXcodeProjSearchDepth(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
         		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_emptyValue() + " (min " + XcodeBuilder.MIN_XCODE_PROJECT_SEARCH_DEPTH +
@@ -611,16 +642,11 @@ public class XcodeBuilder extends Builder {
             return FormValidation.ok();
         }
         
-        public FormValidation doCheckIpaFilenameTemplate(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckFilenameTemplate(@QueryParameter String value) throws IOException, ServletException {
         	if(value.isEmpty())
-        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckIpaFilenameTemplate_setDefaultIpaFilename());
+        		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckFilenameTemplate_setDefaultFilename());
         	
             return FormValidation.ok();
-        }
-
-        @SuppressWarnings("rawtypes")
-		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-        	return jobType == FreeStyleProject.class;
         }
         
         public String[] getProjectDirs(FilePath workspace) {

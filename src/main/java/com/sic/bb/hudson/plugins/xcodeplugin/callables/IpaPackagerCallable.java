@@ -10,7 +10,7 @@ import com.sic.bb.hudson.plugins.xcodeplugin.util.ExtendedFile;
 import hudson.FilePath.FileCallable;
 import hudson.remoting.VirtualChannel;
 
-public class IpaPackagerCallable  implements FileCallable<Boolean> {
+public class IpaPackagerCallable implements FileCallable<Boolean> {
 	private static final long serialVersionUID = 1L;
 	private static final String subfolderName = "Payload";
 	
