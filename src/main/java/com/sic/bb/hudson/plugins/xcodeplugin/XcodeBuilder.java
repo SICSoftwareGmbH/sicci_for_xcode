@@ -31,6 +31,7 @@ import javax.servlet.ServletException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -43,6 +44,7 @@ import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodeProjectType;
 import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodebuildParser;
 
 public class XcodeBuilder extends Builder {
+	private static final String TRUE = "true";
 	private static final int RETURN_OK = 0;
 	private static final int RETURN_ERROR = 1;
 	private static final int MIN_XCODE_PROJECT_SEARCH_DEPTH = 1;
@@ -52,9 +54,9 @@ public class XcodeBuilder extends Builder {
 	
     private final Map<String,String> data;
     
-    private FilePath currentProjectDirectory;
-    private String currentUsername;
-    private String currentPassword;
+    private transient FilePath currentProjectDirectory;
+    private transient String currentUsername;
+    private transient String currentPassword;
 
     public XcodeBuilder(Map<String,String> data) {
     	this.data = data;
@@ -64,6 +66,7 @@ public class XcodeBuilder extends Builder {
     	if(!this.data.containsKey("ProjectDir"))
     		return null;
     	
+		// TODO ProjectDir could contain slashes (right dir separator?)
     	return this.data.get("ProjectDir");
     }
     
@@ -92,7 +95,7 @@ public class XcodeBuilder extends Builder {
     	if(!this.data.containsKey(key))
     		return false;
     	
-    	return this.data.get(key).equals("true");
+    	return this.data.get(key).equals(TRUE);
     }
     
     public boolean subMenuUsed(String target) {
@@ -119,7 +122,6 @@ public class XcodeBuilder extends Builder {
     
     public String[] availableSdks(FilePath workspace) {
     	if(getProjectDir() != null)
-    		// TODO child could contain slashes (right dir separator?)
     		return getDescriptor().availableSdks(workspace.child(getProjectDir()));
     	
     	return getDescriptor().availableSdks(workspace);
@@ -127,7 +129,6 @@ public class XcodeBuilder extends Builder {
 
     public String[] getBuildConfigurations(FilePath workspace) {
     	if(getProjectDir() != null)
-    		// TODO child could contain slashes (right dir separator?)
     		return getDescriptor().getBuildConfigurations(workspace.child(getProjectDir()));
 
     	return getDescriptor().getBuildConfigurations(workspace);
@@ -135,7 +136,6 @@ public class XcodeBuilder extends Builder {
     
     public String[] getBuildTargets(FilePath workspace) {
     	if(getProjectDir() != null)
-    		// TODO child could contain slashes (right dir separator?)
     		return getDescriptor().getBuildTargets(workspace.child(getProjectDir()));
 
     	return getDescriptor().getBuildTargets(workspace);
@@ -161,7 +161,6 @@ public class XcodeBuilder extends Builder {
 		}
 		
         if(getProjectDir() != null)
-    		// TODO child could contain slashes (right dir separator?)
 			workspace = workspace.child(getProjectDir());
 		
 		try {
@@ -179,27 +178,23 @@ public class XcodeBuilder extends Builder {
 			// TODO
 		}
 		
-		XcodeUserNodeProperty property = curComputer.getNode().getNodeProperties().get(XcodeUserNodeProperty.class);
+		XcodeUserNodeProperty property = XcodeUserNodeProperty.getCurrentNodesProperties();
 		
 		if(property == null) {
-			property = Hudson.getInstance().getGlobalNodeProperties().get(XcodeUserNodeProperty.class);
-			
-			if(property == null) {
-				listener.fatalError("xcode preferences not set");
-				return false;
-			}
+			listener.fatalError("xcode preferences not set");
+			return false;
 		}
 		
 		this.currentUsername = property.getUsername();
 		this.currentPassword = property.getPassword();
 		
-		if(this.currentUsername == null || this.currentUsername.isEmpty()) {
+		if(this.currentUsername == null) {
 			// TODO
 			listener.fatalError("xcode username not set");
 			return false;
 		}
 		
-		if(this.currentPassword == null || this.currentPassword.isEmpty()) {
+		if(this.currentPassword == null) {
 			// TODO
 			listener.fatalError("xcode password not set");
 			return false;
@@ -214,8 +209,8 @@ public class XcodeBuilder extends Builder {
         XcodeBuilderDescriptor descr = getDescriptor();
         FilePath workspace = this.currentProjectDirectory;
         
-        ArrayList<String> blackList =  new ArrayList<String>();
-		ArrayList<Integer> returnCodes = new ArrayList<Integer>();
+        List<String> blackList =  new ArrayList<String>();
+		List<Integer> returnCodes = new ArrayList<Integer>();
 		
         int rcode = RETURN_OK;
         
@@ -236,17 +231,14 @@ public class XcodeBuilder extends Builder {
 			
 			// <build>
 
-			if(this.currentUsername != null && !this.currentUsername.isEmpty() && 
-					this.currentPassword != null && !this.currentPassword.isEmpty()) {
-				// TODO: plaintext password will be logged
-				rcode = launcher.launch().envs(envs).pwd(workspace).
-								cmds(CheckXcodeInstallationCallable.SECURITY_COMMAND,"unlock-keychain","-p",this.currentPassword,
-										CheckXcodeInstallationCallable.getKeychain(this.currentUsername)).join();
-			
-				if(rcode != RETURN_OK) {
-					listener.fatalError(Messages.XcodeBuilder_perform_keychainNotUnlockable());
-					return false;
-				}
+			// TODO: plaintext password will be logged
+			rcode = launcher.launch().envs(envs).pwd(workspace).
+							cmds(CheckXcodeInstallationCallable.SECURITY_COMMAND,"unlock-keychain","-p",this.currentPassword,
+									CheckXcodeInstallationCallable.getKeychain(this.currentUsername)).join();
+		
+			if(rcode != RETURN_OK) {
+				listener.fatalError(Messages.XcodeBuilder_perform_keychainNotUnlockable());
+				return false;
 			}
 			
 			for(String toBuild: getToPerformStep("build",true)) {
@@ -257,20 +249,16 @@ public class XcodeBuilder extends Builder {
 					blackList.add(toBuild);
 				
 				returnCodes.add(rcode);
-			}
-			
+			}		
 
-			if(this.currentUsername != null && !this.currentUsername.isEmpty() && 
-					this.currentPassword != null && !this.currentPassword.isEmpty()) {
-				// TODO: plaintext password will be logged
-				rcode = launcher.launch().envs(envs).pwd(workspace).
-								cmds(CheckXcodeInstallationCallable.SECURITY_COMMAND,"lock-keychain",
-										CheckXcodeInstallationCallable.getKeychain(this.currentUsername)).join();
-				
-				if(rcode != RETURN_OK) {
-					listener.fatalError(Messages.XcodeBuilder_perform_keychainNotLockable());
-					return false;
-				}
+			// TODO: plaintext password will be logged
+			rcode = launcher.launch().envs(envs).pwd(workspace).
+							cmds(CheckXcodeInstallationCallable.SECURITY_COMMAND,"lock-keychain",
+									CheckXcodeInstallationCallable.getKeychain(this.currentUsername)).join();
+			
+			if(rcode != RETURN_OK) {
+				listener.fatalError(Messages.XcodeBuilder_perform_keychainNotLockable());
+				return false;
 			}
 			
 			// </build>
@@ -357,7 +345,7 @@ public class XcodeBuilder extends Builder {
 			
 			String[] fields = key.split("\\|");
 			
-			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || (!force && !this.data.get(key).equals("true"))))
+			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || (!force && !this.data.get(key).equals(TRUE))))
 				continue;
 			
 			toPerformStep.add(fields[0] + '|' + fields[1]);
@@ -388,7 +376,7 @@ public class XcodeBuilder extends Builder {
     	else
     		filename = getFilenameTemplate();
     	
-    	if(filename == null || filename.isEmpty())
+    	if(filename == null)
     		filename = DEFAULT_FILENAME_TEMPLATE;
     	
     	Date buildTimeStamp = build.getTimestamp().getTime();
@@ -411,9 +399,9 @@ public class XcodeBuilder extends Builder {
     
     @Extension
     public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
-    	private XcodebuildParser xcodebuildParser; 	
-    	private Map<String,FilePath> projectWorkspaceMap;
-    	private FilePath currentProjectDir;
+    	private transient XcodebuildParser xcodebuildParser; 	
+    	private transient Map<String,FilePath> projectWorkspaceMap;
+    	private transient FilePath currentProjectDir;
     	
     	private String filenameTemplate;
         private boolean filenameTemplateGlobal;
@@ -445,16 +433,8 @@ public class XcodeBuilder extends Builder {
         
         @Override
         public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-        	// we don't want to persist temporary data
-        	this.projectWorkspaceMap = null;
-        	this.currentProjectDir = null;
-        	this.xcodebuildParser = null;
-        	
             req.bindJSON(this, formData);
             save();
-            
-            this.projectWorkspaceMap = new HashMap<String,FilePath>();
-            this.xcodebuildParser = new XcodebuildParser();
             
             return super.configure(req,formData);
         }
@@ -478,9 +458,9 @@ public class XcodeBuilder extends Builder {
         		} else if(formData.get(key).getClass() == JSONObject.class) {
         			formDataMap.putAll(collectFormData((JSONObject) formData.get(key)));
         		} else {
-        			if(!formData.getString(key).isEmpty()) {
-        				formDataMap.put(key,formData.getString(key));
-        				//System.out.println(key + " : " + formData.getString(key));
+        			if(!StringUtils.isBlank(formData.getString(key))) {
+        				formDataMap.put(key,StringUtils.strip(formData.getString(key)));
+        				//System.out.println(key + " : " + StringUtils.strip(formData.getString(key)));
         			}
         		}
         	}
@@ -494,7 +474,7 @@ public class XcodeBuilder extends Builder {
         
         public void setXcodeProjSearchDepth(String searchDepth) {        	
         	try {
-        		this.xcodeProjSearchDepth = Integer.parseInt(searchDepth);
+        		this.xcodeProjSearchDepth = Integer.parseInt(StringUtils.strip(searchDepth));
         		
         		if(this.xcodeProjSearchDepth < XcodeBuilder.MIN_XCODE_PROJECT_SEARCH_DEPTH ||
         				this.xcodeProjSearchDepth > XcodeBuilder.MAX_XCODE_PROJECT_SEARCH_DEPTH)
@@ -569,14 +549,14 @@ public class XcodeBuilder extends Builder {
         }
         
         public void setFilenameTemplate(String filenameTemplate) {
-        	if(filenameTemplate == null || filenameTemplate.isEmpty())
+        	if(StringUtils.isBlank(filenameTemplate))
         		this.filenameTemplate = XcodeBuilder.DEFAULT_FILENAME_TEMPLATE;
         	else
-        		this.filenameTemplate = filenameTemplate;
+        		this.filenameTemplate = StringUtils.strip(filenameTemplate);
         }
         
         public String getFilenameTemplate() {
-        	if(this.filenameTemplate == null || this.filenameTemplate.isEmpty())
+        	if(StringUtils.isBlank(this.filenameTemplate))
         		return XcodeBuilder.DEFAULT_FILENAME_TEMPLATE;
         	
         	return this.filenameTemplate;
@@ -612,7 +592,6 @@ public class XcodeBuilder extends Builder {
         
         public void doAjaxTargets(StaplerRequest req, StaplerResponse rsp, @QueryParameter String jobName, @QueryParameter String projectDir) throws IOException, ServletException {
         	if(this.projectWorkspaceMap.containsKey(jobName))
-        		// TODO child could contain slashes (right dir separator?)
         		this.currentProjectDir = this.projectWorkspaceMap.get(jobName).child(projectDir);
         	
         	req.getView(this,'/' + XcodeBuilder.class.getName().replaceAll("\\.","\\/")  + "/targets.jelly").forward(req, rsp);
@@ -622,14 +601,14 @@ public class XcodeBuilder extends Builder {
         }
         
         public FormValidation doCheckXcodeProjSearchDepth(@QueryParameter String value) throws IOException, ServletException {
-        	if(value.isEmpty())
+        	if(StringUtils.isBlank(value))
         		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_emptyValue() + " (min " + XcodeBuilder.MIN_XCODE_PROJECT_SEARCH_DEPTH +
         				", max " + XcodeBuilder.MAX_XCODE_PROJECT_SEARCH_DEPTH + ')');
         	
         	int xcodeProjSearchDepth;
         	
         	try {
-        		xcodeProjSearchDepth = Integer.parseInt(value);
+        		xcodeProjSearchDepth = Integer.parseInt(StringUtils.strip(value));
         	} catch(NumberFormatException e) {
         		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckXcodeProjSearchDepth_valueNotANumber());
         	}
@@ -643,7 +622,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public FormValidation doCheckFilenameTemplate(@QueryParameter String value) throws IOException, ServletException {
-        	if(value.isEmpty())
+        	if(StringUtils.isBlank(value))
         		return FormValidation.error(Messages.XcodeBuilderDescriptor_doCheckFilenameTemplate_setDefaultFilename());
         	
             return FormValidation.ok();
@@ -658,7 +637,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public String[] getProjectDirs(FilePath workspace, int searchDepth) { 	
-        	ArrayList<String> projectDirs = new ArrayList<String>();
+        	List<String> projectDirs = new ArrayList<String>();
         	
         	if(workspace.isRemote())
         		this.projectWorkspaceMap.put(workspace.getName(),workspace);

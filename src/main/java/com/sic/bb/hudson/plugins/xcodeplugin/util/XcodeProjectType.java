@@ -4,6 +4,9 @@ public final class XcodeProjectType {
 	public static final String[] ProjectTypes = new String[] {"Mac OS X", "iOS", "iOS Simulator"};
 
 	public static String getProjectBuildDirName(String xcodeProjectType, String configurationName) {
+		if(xcodeProjectType == null || configurationName == null)
+			return null;
+		
 		if(xcodeProjectType.equals(ProjectTypes[0]))
 			return configurationName;
 		else if(xcodeProjectType.equals(ProjectTypes[1]))
