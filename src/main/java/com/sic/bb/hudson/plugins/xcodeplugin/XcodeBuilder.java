@@ -39,7 +39,7 @@ import com.sic.bb.hudson.plugins.xcodeplugin.callables.AppArchiverCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.CheckXcodeInstallationCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.IpaPackagerCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.XcodeProjectSearchCallable;
-import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodeProjectType;
+import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodePlatform;
 import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodebuildParser;
 
 public class XcodeBuilder extends Builder {
@@ -69,11 +69,11 @@ public class XcodeBuilder extends Builder {
     	return this.data.get("ProjectDir");
     }
     
-    public String getXcodeProjectType() {
-    	if(!this.data.containsKey("XcodeProjectType"))
+    public String getXcodePlatform() {
+    	if(!this.data.containsKey("XcodePlatform"))
     		return null;
     	
-    	return this.data.get("XcodeProjectType");
+    	return this.data.get("XcodePlatform");
     }
     
     public String getFilenameTemplate() {
@@ -274,7 +274,7 @@ public class XcodeBuilder extends Builder {
 						
 					String[] array = toArchiveApp.split(XcodeBuilderDescriptor.FIELD_DELIMITER_REGEX);
 					
-					String configBuildDirName = XcodeProjectType.getProjectBuildDirName(getXcodeProjectType(), array[1]);
+					String configBuildDirName = XcodePlatform.getProjectBuildDirName(getXcodePlatform(), array[1]);
 					
 					if(configBuildDirName == null || !buildDir.child(configBuildDirName).isDirectory()) {
 						returnCodes.add(RETURN_ERROR);
@@ -303,7 +303,7 @@ public class XcodeBuilder extends Builder {
 						
 					String[] array = toCreateIpa.split(XcodeBuilderDescriptor.FIELD_DELIMITER_REGEX);
 					
-					String configBuildDirName = XcodeProjectType.getProjectBuildDirName(getXcodeProjectType(), array[1]);
+					String configBuildDirName = XcodePlatform.getProjectBuildDirName(getXcodePlatform(), array[1]);
 					
 					if(configBuildDirName == null || !buildDir.child(configBuildDirName).isDirectory()) {
 						returnCodes.add(RETURN_ERROR);
@@ -575,11 +575,11 @@ public class XcodeBuilder extends Builder {
         	return this.currentProjectDir;
         }
         
-        public String[] getXcodeProjectTypes() {
-        	return XcodeProjectType.ProjectTypes;
+        public String[] getXcodePlatforms() {
+        	return XcodePlatform.Platforms;
         }
         
-        public String getXcodeProjectType() {
+        public String getXcodePlatform() {
         	return null;
         }
         

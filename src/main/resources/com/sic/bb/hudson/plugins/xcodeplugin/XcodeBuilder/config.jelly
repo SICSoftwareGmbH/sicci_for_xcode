@@ -71,15 +71,15 @@
 				</j:choose>
 			</xb:singleEntry>
 			
-			<xb:singleEntry title="${%xcode project type}" help="help-xcodeprojecttype.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
-				<select name="XcodeProjectType" field="XcodeProjectType">
-					<j:forEach items="${descriptor.getXcodeProjectTypes()}" var="xcodeProjectType">
+			<xb:singleEntry title="${%xcode platform}" help="help-xcodeplatform.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
+				<select name="XcodePlatform" field="XcodePlatform">
+					<j:forEach items="${descriptor.getXcodePlatforms()}" var="xcodePlatform">
 						<j:choose>
-							<j:when test="${xcodeProjectType == builder.getXcodeProjectType()}">
-								<option value="${xcodeProjectType}" selected="selected">${xcodeProjectType}</option>
+							<j:when test="${xcodePlatform == builder.getXcodePlatform()}">
+								<option value="${xcodePlatform}" selected="selected">${xcodePlatform}</option>
 							</j:when>
 							<j:otherwise>
-								<option value="${xcodeProjectType}">${xcodeProjectType}</option>
+								<option value="${xcodePlatform}">${xcodePlatform}</option>
 							</j:otherwise>
 						</j:choose>
 					</j:forEach>
