@@ -22,6 +22,8 @@
 		<!-- everything is ok -->
 		
 		<j:otherwise>
+			<j:set var="noProjectDirs" value="false" />
+		
 			<xb:singleEntry title="${%project dir}" help="help-projectdir.html" titleStyle="vertical-align:middle; padding:15px 0 0 14px;" mainStyle="padding:15px 0 0 5px;" helpStyle="padding:15px 0 0 0" helpAreaStyle="padding:0 0 0 14px;">
 				<j:set var="projectDirs" value="${builder.getProjectDirs(workspace)}" />
 				
@@ -121,7 +123,7 @@
 			
 			-->
 			
-			<j:if test="${noProjectDirs == null}">
+			<j:if test="${!noProjectDirs}">
 				<tr>
 					<td style="padding:10px 0 0 0;"><st:nbsp /></td>
 					<td style="padding:10px 0 0 14px;"><span style="font-weight:bold;">${%build targets}:</span></td>

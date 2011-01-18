@@ -9,7 +9,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Computer;
 import hudson.model.FreeStyleProject;
-import hudson.model.Hudson;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
@@ -100,7 +99,7 @@ public class XcodeBuilder extends Builder {
     
     public boolean subMenuUsed(String target) {
     	for(String key: (String[]) this.data.keySet().toArray(new String[this.data.size()]))
-    		if(key.contains(target + '|'))
+    		if(key.contains(target))
     			return true;
     	
     	return false;
@@ -151,7 +150,7 @@ public class XcodeBuilder extends Builder {
 		Computer curComputer = Computer.currentComputer();
 		FilePath workspace = build.getWorkspace();
 		
-		// to empty cache of xcodebuildparser
+		// to empty cache of XcodebuildParser
         getDescriptor().getXcodebuildParser().setWorkspaceTemp(workspace.getParent().getName());
 		
 		if(!curComputer.getNode().createLauncher(listener).isUnix()) {
@@ -222,7 +221,7 @@ public class XcodeBuilder extends Builder {
 			// <cleanup>
 			
 			if(!(descr.getCleanBeforeBuildGlobal() && !descr.getCleanBeforeBuild())) {
-				for(String toClean: getToPerformStep("clean_before_build",(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
+				for(String toClean: getToPerformStep(XcodeBuilderDescriptor.CLEAN_BEFORE_BUILD_ARG,(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
 					returnCodes.add(launcher.launch().envs(envs).stdout(listener).pwd(workspace).
 							cmds(createCmds(toClean,"clean")).join());
 			}
@@ -231,7 +230,6 @@ public class XcodeBuilder extends Builder {
 			
 			// <build>
 
-			// TODO: plaintext password will be logged
 			rcode = launcher.launch().envs(envs).pwd(workspace).
 							cmds(CheckXcodeInstallationCallable.SECURITY_COMMAND,"unlock-keychain","-p",this.currentPassword,
 									CheckXcodeInstallationCallable.getKeychain(this.currentUsername)).join();
@@ -251,7 +249,6 @@ public class XcodeBuilder extends Builder {
 				returnCodes.add(rcode);
 			}		
 
-			// TODO: plaintext password will be logged
 			rcode = launcher.launch().envs(envs).pwd(workspace).
 							cmds(CheckXcodeInstallationCallable.SECURITY_COMMAND,"lock-keychain",
 									CheckXcodeInstallationCallable.getKeychain(this.currentUsername)).join();
@@ -269,13 +266,13 @@ public class XcodeBuilder extends Builder {
 			// <archive app>
 			
 			if(!(descr.getArchiveAppGlobal() && !descr.getArchiveApp())) {	
-				for(String toArchiveApp: getToPerformStep("archive_app",(descr.getArchiveAppGlobal() && descr.getArchiveApp()))) {
+				for(String toArchiveApp: getToPerformStep(XcodeBuilderDescriptor.ARCHIVE_APP_ARG,(descr.getArchiveAppGlobal() && descr.getArchiveApp()))) {
 					if(blackList.contains(toArchiveApp)) {
 						returnCodes.add(RETURN_ERROR);
 						continue;
 					}
 						
-					String[] array = toArchiveApp.split("\\|");
+					String[] array = toArchiveApp.split(XcodeBuilderDescriptor.FIELD_DELIMITER_REGEX);
 					
 					String configBuildDirName = XcodeProjectType.getProjectBuildDirName(getXcodeProjectType(), array[1]);
 					
@@ -298,13 +295,13 @@ public class XcodeBuilder extends Builder {
 			// <create ipa>
 			
 			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
-				for(String toCreateIpa: getToPerformStep("create_ipa",(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
+				for(String toCreateIpa: getToPerformStep(XcodeBuilderDescriptor.CREATE_IPA_ARG,(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
 					if(blackList.contains(toCreateIpa)) {
 						returnCodes.add(RETURN_ERROR);
 						continue;
 					}
 						
-					String[] array = toCreateIpa.split("\\|");
+					String[] array = toCreateIpa.split(XcodeBuilderDescriptor.FIELD_DELIMITER_REGEX);
 					
 					String configBuildDirName = XcodeProjectType.getProjectBuildDirName(getXcodeProjectType(), array[1]);
 					
@@ -340,15 +337,15 @@ public class XcodeBuilder extends Builder {
     	Set<String> toPerformStep = new HashSet<String>();
     	
     	for(String key: keys) {
-			if(!key.contains("|"))
+			if(key.indexOf(XcodeBuilderDescriptor.FIELD_DELIMITER) == -1)
 				continue;
 			
-			String[] fields = key.split("\\|");
+			String[] fields = key.split(XcodeBuilderDescriptor.FIELD_DELIMITER_REGEX);
 			
 			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || (!force && !this.data.get(key).equals(TRUE))))
 				continue;
 			
-			toPerformStep.add(fields[0] + '|' + fields[1]);
+			toPerformStep.add(fields[0] + XcodeBuilderDescriptor.FIELD_DELIMITER + fields[1]);
 		}
     	
     	return toPerformStep;
@@ -356,7 +353,7 @@ public class XcodeBuilder extends Builder {
     
     private static List<String> createCmds(String arg, String cmd) {
     	List<String> cmds = new ArrayList<String>();
-    	String[] args = arg.split("\\|");
+    	String[] args = arg.split(XcodeBuilderDescriptor.FIELD_DELIMITER_REGEX);
 		
 		cmds.add(CheckXcodeInstallationCallable.XCODEBUILD_COMMAND);
 		cmds.add("-target");
@@ -399,6 +396,13 @@ public class XcodeBuilder extends Builder {
     
     @Extension
     public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
+    	public static final char FIELD_DELIMITER = '|';
+    	public static final String FIELD_DELIMITER_REGEX = "\\|";
+    	
+    	public static final String CLEAN_BEFORE_BUILD_ARG = "clean_before_build";
+    	public static final String CREATE_IPA_ARG = "create_ipa";
+    	public static final String ARCHIVE_APP_ARG = "archive_app";
+    	
     	private transient XcodebuildParser xcodebuildParser; 	
     	private transient Map<String,FilePath> projectWorkspaceMap;
     	private transient FilePath currentProjectDir;
@@ -415,11 +419,8 @@ public class XcodeBuilder extends Builder {
         	super(XcodeBuilder.class);
         	load();
         	
-        	if(this.xcodebuildParser == null)
-            	this.xcodebuildParser = new XcodebuildParser();
-        	
-        	if(this.projectWorkspaceMap == null)
-        		this.projectWorkspaceMap = new HashMap<String,FilePath>();
+            this.xcodebuildParser = new XcodebuildParser();        	
+        	this.projectWorkspaceMap = new HashMap<String,FilePath>();
         }
         
         public String getDisplayName() {
@@ -636,7 +637,8 @@ public class XcodeBuilder extends Builder {
         	return getProjectDirs(workspace, this.xcodeProjSearchDepth);
         }
         
-        public String[] getProjectDirs(FilePath workspace, int searchDepth) { 	
+        @SuppressWarnings("deprecation")
+		public String[] getProjectDirs(FilePath workspace, int searchDepth) { 	
         	List<String> projectDirs = new ArrayList<String>();
         	
         	if(workspace.isRemote())

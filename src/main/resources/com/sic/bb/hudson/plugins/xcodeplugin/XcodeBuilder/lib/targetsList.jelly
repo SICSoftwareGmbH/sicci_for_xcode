@@ -24,24 +24,26 @@
 							<td style="padding:0 0 5px 0;"><span style="font-weight:bold;">${%build configurations}:</span></td>
 						</tr>
 						
-						<j:forEach items="${builder.getBuildConfigurations(projectDir)}" var="config">
-							<j:set var="subMenuUsed" value="${builder.subMenuUsed(target + '|' + config)}" />
+						<j:forEach items="${builder.getBuildConfigurations(projectDir)}" var="configuration">
+							<j:set var="entry_preamble" value="${target + descriptor.FIELD_DELIMITER + configuration + descriptor.FIELD_DELIMITER}" />
+							<j:set var="subMenuUsed" value="${builder.subMenuUsed(entry_preamble)}" />
 							
-							<f:optionalBlock title="${config}" checked="${subMenuUsed}">
+							<f:optionalBlock title="${configuration}" checked="${subMenuUsed}">
 								<td>
 								<table style="width:100%; padding:5px 0 0 13px;">
 									<xb:singleEntry title="${%clean before build}:" help="help-cleanbeforebuild.html" titleStyle="vertical-align:middle;">
+									<j:set var="entry" value="${entry_preamble + descriptor.CLEAN_BEFORE_BUILD_ARG}" />
 									<j:choose>
 										<j:when test="${descriptor.getCleanBeforeBuildGlobal()}">
-											<input type="checkbox" name="${target}|${config}|clean_before_build" checked="${descriptor.getCleanBeforeBuild() ? 'true' : null}" disabled="disabled" />
+											<input type="checkbox" name="${entry}" checked="${descriptor.getCleanBeforeBuild() ? 'true' : null}" disabled="disabled" />
 										</j:when>
 										<j:otherwise>
 											<j:choose>
 												<j:when test="${subMenuUsed}">
-													<f:checkbox name="${target}|${config}|clean_before_build" checked="${builder.getBooleanPreference(target + '|' + config + '|clean_before_build')}" />
+													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
 												</j:when>
 												<j:otherwise>
-													<f:checkbox name="${target}|${config}|clean_before_build" checked="${descriptor.getCleanBeforeBuild()}" />
+													<f:checkbox name="${entry}" checked="${descriptor.getCleanBeforeBuild()}" />
 												</j:otherwise>
 											</j:choose>
 										</j:otherwise>
@@ -49,17 +51,18 @@
 									</xb:singleEntry>
 									
 									<xb:singleEntry title="${%archive app}:" help="help-archiveapp.html" titleStyle="vertical-align:middle;">
+									<j:set var="entry" value="${entry_preamble + descriptor.ARCHIVE_APP_ARG}" />
 									<j:choose>
 										<j:when test="${descriptor.getArchiveAppGlobal()}">
-											<input type="checkbox" name="${target}|${config}|archive_app" checked="${descriptor.getArchiveApp() ? 'true' : null}" disabled="disabled" />
+											<input type="checkbox" name="${entry}" checked="${descriptor.getArchiveApp() ? 'true' : null}" disabled="disabled" />
 										</j:when>
 										<j:otherwise>
 											<j:choose>
 												<j:when test="${subMenuUsed}">
-													<f:checkbox name="${target}|${config}|archive_app" checked="${builder.getBooleanPreference(target + '|' + config  + '|archive_app')}" />
+													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
 												</j:when>
 												<j:otherwise>
-													<f:checkbox name="${target}|${config}|archive_app" checked="${descriptor.getArchiveApp()}" />
+													<f:checkbox name="${entry}" checked="${descriptor.getArchiveApp()}" />
 												</j:otherwise>
 											</j:choose>
 										</j:otherwise>
@@ -67,17 +70,18 @@
 									</xb:singleEntry>
 									
 									<xb:singleEntry title="${%create ipa}:" help="help-createipa.html" titleStyle="vertical-align:middle;">
+									<j:set var="entry" value="${entry_preamble + descriptor.CREATE_IPA_ARG}" />
 									<j:choose>
 										<j:when test="${descriptor.getCreateIpaGlobal()}">
-											<input type="checkbox" name="${target}|${config}|create_ipa" checked="${descriptor.getCreateIpa() ? 'true' : null}" disabled="disabled" />
+											<input type="checkbox" name="${entry}" checked="${descriptor.getCreateIpa() ? 'true' : null}" disabled="disabled" />
 										</j:when>
 										<j:otherwise>
 											<j:choose>
 												<j:when test="${subMenuUsed}">
-													<f:checkbox name="${target}|${config}|create_ipa" checked="${builder.getBooleanPreference(target + '|' + config  + '|create_ipa')}" />
+													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
 												</j:when>
 												<j:otherwise>
-													<f:checkbox name="${target}|${config}|create_ipa" checked="${descriptor.getCreateIpa()}" />
+													<f:checkbox name="${entry}" checked="${descriptor.getCreateIpa()}" />
 												</j:otherwise>
 											</j:choose>
 										</j:otherwise>

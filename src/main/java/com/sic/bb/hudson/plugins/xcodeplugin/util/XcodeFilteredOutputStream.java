@@ -35,13 +35,13 @@ public class XcodeFilteredOutputStream extends LineTransformationOutputStream {
 	      regex.append(')');
 	    }
 	    
-	    toSuppressPattern = Pattern.compile(regex.toString());
+	    this.toSuppressPattern = Pattern.compile(regex.toString());
 	}
 	
 	@Override
 	protected void eol(byte[] bytes, int len) throws IOException {
 	    String line = new String(bytes, 0, len);
-	    line = toSuppressPattern.matcher(line).replaceAll(MASK);
-	    logger.write(line.getBytes());
+	    line = this.toSuppressPattern.matcher(line).replaceAll(MASK);
+	    this.logger.write(line.getBytes());
 	}
 }
