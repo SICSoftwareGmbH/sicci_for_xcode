@@ -108,21 +108,6 @@
 			</j:choose>
 			</xb:singleEntry>
 			
-			<!--
-			
-			<xb:singleEntry title="${%use xcode clean}" help="help-xcodeclean.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" helpAreaStyle="padding:0 0 0 14px;">
-			<j:choose>
-				<j:when test="${descriptor.getXcodeCleanGlobal()}">
-					<input name="XcodeClean" type="checkbox" checked="${descriptor.getXcodeClean() ? 'true' : null}" disabled="disabled" />
-				</j:when>
-				<j:otherwise>
-					<f:checkbox field="XcodeClean" default="${descriptor.getXcodeClean()}" />
-				</j:otherwise>
-			</j:choose>
-			</xb:singleEntry>
-			
-			-->
-			
 			<j:if test="${!noProjectDirs}">
 				<tr>
 					<td style="padding:10px 0 0 0;"><st:nbsp /></td>
