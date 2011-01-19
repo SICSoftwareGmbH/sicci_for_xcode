@@ -52,14 +52,6 @@
     		</td>
     	</xb:multipleEntry>
     	
-    	<!--
-		
-    	<xb:singleEntry title="${%xcodebuild path}" help="help-xcodebuild.html">
-    		<f:textbox field="xcodebuild" name="xcodebuild.xcodebuild" value="${descriptor.getXcodebuild()}" />
-    	</xb:singleEntry>
-    	
-    	-->
-    	
 	</f:section>
 	
 </j:jelly>

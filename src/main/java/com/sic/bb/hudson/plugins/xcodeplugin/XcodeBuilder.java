@@ -249,6 +249,7 @@ public class XcodeBuilder extends Builder {
 				returnCodes.add(rcode);
 			}		
 
+			/* TODO: could be a race condition
 			rcode = launcher.launch().envs(envs).pwd(workspace).
 							cmds(CheckXcodeInstallationCallable.SECURITY_COMMAND,"lock-keychain",
 									CheckXcodeInstallationCallable.getKeychain(this.currentUsername)).join();
@@ -257,6 +258,7 @@ public class XcodeBuilder extends Builder {
 				listener.fatalError(Messages.XcodeBuilder_perform_keychainNotLockable());
 				return false;
 			}
+			*/
 			
 			// </build>
 			
