@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringUtils;
 
 public class XcodeFilteredOutputStream extends LineTransformationOutputStream {
 	private static final String MASK = "******";
+	private static final String[] REGEXSPECIALCHARS = new String[] {"(",")","{","}","[","]","^","$","*",".","?","|"};
 	
 	private final OutputStream logger;
 	private final Pattern toSuppressPattern;
@@ -27,7 +28,10 @@ public class XcodeFilteredOutputStream extends LineTransformationOutputStream {
 	        if(StringUtils.isBlank(item))
 	          continue;
 
-	        regex.append(item.replace("(", "\\(").replace("|", "\\|").replace(")", "\\)"));
+	        for(String regexChar: REGEXSPECIALCHARS)
+	        	item = item.replace(regexChar, "\\" + regexChar);
+	        
+	        regex.append(item);
 	        regex.append('|');
 	      }
 	      
