@@ -261,11 +261,18 @@ public class XcodeBuilder extends Builder {
 						
 					String[] array = toArchiveApp.split(FIELD_DELIMITER_REGEX);
 					
-					String configBuildDirName = XcodePlatform.getProjectBuildDirName(getXcodePlatform(), array[1]);
+					String configBuildDirName = null;
 					
-					if(configBuildDirName == null || !buildDir.child(configBuildDirName).isDirectory()) {
+					for(String configBuildDirNameTemp: XcodePlatform.fromString(getXcodePlatform()).getProjectBuildDirNames(array[1])) {
+						if(buildDir.child(configBuildDirNameTemp).isDirectory()) {
+							configBuildDirName = configBuildDirNameTemp;
+							break;
+						}
+					}
+						
+					if(configBuildDirName == null) {
 						returnCodes.add(false);
-						continue;
+						continue;	
 					}
 					
 					FilePath tempBuildDir = buildDir.child(configBuildDirName);
@@ -290,11 +297,18 @@ public class XcodeBuilder extends Builder {
 						
 					String[] array = toCreateIpa.split(FIELD_DELIMITER_REGEX);
 					
-					String configBuildDirName = XcodePlatform.getProjectBuildDirName(getXcodePlatform(), array[1]);
+					String configBuildDirName = null;
 					
-					if(configBuildDirName == null || !buildDir.child(configBuildDirName).isDirectory()) {
+					for(String configBuildDirNameTemp: XcodePlatform.fromString(getXcodePlatform()).getProjectBuildDirNames(array[1])) {
+						if(buildDir.child(configBuildDirNameTemp).isDirectory()) {
+							configBuildDirName = configBuildDirNameTemp;
+							break;
+						}
+					}
+						
+					if(configBuildDirName == null) {
 						returnCodes.add(false);
-						continue;
+						continue;	
 					}
 					
 					FilePath tempBuildDir = buildDir.child(configBuildDirName);
@@ -317,7 +331,8 @@ public class XcodeBuilder extends Builder {
     }
     
     private Set<String> getToPerformStep(String cmd, boolean force) {
-    	String[] keys = (String[]) this.data.keySet().toArray(new String[this.data.size()]);
+    	//String[] keys = (String[]) this.data.keySet().toArray(new String[this.data.size()]);
+    	Set<String> keys = this.data.keySet();
     	Set<String> toPerformStep = new HashSet<String>();
     	
     	for(String key: keys) {
@@ -552,7 +567,7 @@ public class XcodeBuilder extends Builder {
         }
         
         public String[] getXcodePlatforms() {
-        	return XcodePlatform.Platforms;
+        	return XcodePlatform.getXcodePlatforms();
         }
         
         public String getXcodePlatform() {

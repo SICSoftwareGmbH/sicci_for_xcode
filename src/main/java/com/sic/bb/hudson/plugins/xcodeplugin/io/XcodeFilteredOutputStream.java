@@ -1,5 +1,7 @@
 package com.sic.bb.hudson.plugins.xcodeplugin.io;
 
+import hudson.console.LineTransformationOutputStream;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -8,8 +10,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
-//public class XcodeFilteredOutputStream extends LineTransformationOutputStream {
-public class XcodeFilteredOutputStream extends OutputStream {
+public class XcodeFilteredOutputStream extends LineTransformationOutputStream {
 	private static final String MASK = "******";
 	private static final String[] REGEXSPECIALCHARS = new String[] {"(",")","{","}","[","]","^","$","*",".","?","|"};
 	
@@ -17,11 +18,10 @@ public class XcodeFilteredOutputStream extends OutputStream {
 	private Pattern toSuppressPattern;
 	
 	public XcodeFilteredOutputStream(OutputStream logger, String toSuppress) {
-		List<String> toSuppressList = new ArrayList<String>();
-		toSuppressList.add(toSuppress);
-		
 		this.logger = logger;
 		
+		List<String> toSuppressList = new ArrayList<String>();
+		toSuppressList.add(toSuppress);
 		createSuppressPattern(toSuppressList);
 	}
 	
@@ -54,15 +54,10 @@ public class XcodeFilteredOutputStream extends OutputStream {
 	    
 	    this.toSuppressPattern = Pattern.compile(regex.toString());
 	}
-	
+
 	@Override
-	public void write(int b) throws IOException {
-		// TODO
-	}
-	
-	@Override
-	public void write(byte[] bytes, int off, int len)  throws IOException {
-	    String line = new String(bytes, off, len);
+	protected void eol(byte[] bytes, int len) throws IOException {
+	    String line = new String(bytes, 0, len);
 	    line = this.toSuppressPattern.matcher(line).replaceAll(MASK);
 	    this.logger.write(line.getBytes());
 	}

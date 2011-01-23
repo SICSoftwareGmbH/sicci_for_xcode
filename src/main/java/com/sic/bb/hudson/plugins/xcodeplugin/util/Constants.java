@@ -4,7 +4,7 @@ public final class Constants {
 	public static final String TRUE = "true";
 
 	public static final int RETURN_OK = 0;
-	public static final int RETURN_ERROR = 1;
+	//public static final int RETURN_ERROR = 1;
 	
 	public static final int MIN_XCODE_PROJECT_SEARCH_DEPTH = 1;
 	public static final int MAX_XCODE_PROJECT_SEARCH_DEPTH = 99;
