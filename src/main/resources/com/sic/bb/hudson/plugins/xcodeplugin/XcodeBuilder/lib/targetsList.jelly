@@ -3,7 +3,7 @@
 	<j:set var="builder" value="${attrs.builder}" />
 	<j:set var="descriptor" value="${attrs.descriptor}" />
 	<j:set var="projectDir" value="${attrs.projectDir}" />
-		
+	
 	<!-- Targets/Buildconfigurations -->
 	
 	<j:set var="targets" value="${builder.getBuildTargets(projectDir)}" />
@@ -15,24 +15,41 @@
 		</j:when>
 		
 		<j:otherwise>
+			<j:set var="field_delimiter" value="${descriptor.getFieldDelimiter()}" />
+			<j:set var="unit_test_target_arg" value="${descriptor.getUnitTestTargetArg()}" />
+			<j:set var="clean_before_build_arg" value="${descriptor.getCleanBeforeBuildArg()}" />
+			<j:set var="archive_app_arg" value="${descriptor.getArchiveAppArg()}" />
+			<j:set var="create_ipa_arg" value="${descriptor.getCreateIpaArg()}" />
+		
 			<table style="width:100%; padding:0 0 0 20px;">
 			<j:forEach items="${targets}" var="target">
-				<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(target)}">
+				<j:set var="entry_preamble" value="${target + field_delimiter}" />
+				
+				<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(entry_preamble)}">
 					<td>
 					<table style="width:100%; padding:5px 0 5px 23px">
+						<tr>
+							<td><table>
+								<xb:singleEntry title="${%unit test target}:" help="help-unittesttarget.html" titleStyle="vertical-align:middle;">									
+									<j:set var="entry" value="${entry_preamble + unit_test_target_arg}" />
+									<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
+								</xb:singleEntry>
+							</table></td>
+						</tr>
+						
 						<tr>
 							<td style="padding:0 0 5px 0;"><span style="font-weight:bold;">${%build configurations}:</span></td>
 						</tr>
 						
 						<j:forEach items="${builder.getBuildConfigurations(projectDir)}" var="configuration">
-							<j:set var="entry_preamble" value="${target + descriptor.FIELD_DELIMITER + configuration + descriptor.FIELD_DELIMITER}" />
+							<j:set var="entry_preamble" value="${entry_preamble + configuration + field_delimiter}" />
 							<j:set var="subMenuUsed" value="${builder.subMenuUsed(entry_preamble)}" />
 							
 							<f:optionalBlock title="${configuration}" checked="${subMenuUsed}">
 								<td>
 								<table style="width:100%; padding:5px 0 0 13px;">
 									<xb:singleEntry title="${%clean before build}:" help="help-cleanbeforebuild.html" titleStyle="vertical-align:middle;">
-									<j:set var="entry" value="${entry_preamble + descriptor.CLEAN_BEFORE_BUILD_ARG}" />
+									<j:set var="entry" value="${entry_preamble + clean_before_build_arg}" />
 									<j:choose>
 										<j:when test="${descriptor.getCleanBeforeBuildGlobal()}">
 											<input type="checkbox" name="${entry}" checked="${descriptor.getCleanBeforeBuild() ? 'true' : null}" disabled="disabled" />
@@ -51,7 +68,7 @@
 									</xb:singleEntry>
 									
 									<xb:singleEntry title="${%archive app}:" help="help-archiveapp.html" titleStyle="vertical-align:middle;">
-									<j:set var="entry" value="${entry_preamble + descriptor.ARCHIVE_APP_ARG}" />
+									<j:set var="entry" value="${entry_preamble + archive_app_arg}" />
 									<j:choose>
 										<j:when test="${descriptor.getArchiveAppGlobal()}">
 											<input type="checkbox" name="${entry}" checked="${descriptor.getArchiveApp() ? 'true' : null}" disabled="disabled" />
@@ -70,7 +87,7 @@
 									</xb:singleEntry>
 									
 									<xb:singleEntry title="${%create ipa}:" help="help-createipa.html" titleStyle="vertical-align:middle;">
-									<j:set var="entry" value="${entry_preamble + descriptor.CREATE_IPA_ARG}" />
+									<j:set var="entry" value="${entry_preamble + create_ipa_arg}" />
 									<j:choose>
 										<j:when test="${descriptor.getCreateIpaGlobal()}">
 											<input type="checkbox" name="${entry}" checked="${descriptor.getCreateIpa() ? 'true' : null}" disabled="disabled" />
