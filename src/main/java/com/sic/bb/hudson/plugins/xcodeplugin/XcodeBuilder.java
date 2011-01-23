@@ -53,8 +53,8 @@ import com.sic.bb.hudson.plugins.xcodeplugin.callables.IpaPackagerCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.XcodeProjectSearchCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.cli.SecurityCommandCaller;
 import com.sic.bb.hudson.plugins.xcodeplugin.cli.XcodebuildCommandCaller;
+import com.sic.bb.hudson.plugins.xcodeplugin.io.XcodebuildCommandOutputParser;
 import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodePlatform;
-import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodebuildCommandOutputParser;
 
 public class XcodeBuilder extends Builder {
     private final Map<String,String> data;
@@ -261,23 +261,9 @@ public class XcodeBuilder extends Builder {
 						
 					String[] array = toArchiveApp.split(FIELD_DELIMITER_REGEX);
 					
-					String configBuildDirName = null;
+					FilePath tempBuildDir = getBuildDir(buildDir, array[1]);
 					
-					for(String configBuildDirNameTemp: XcodePlatform.fromString(getXcodePlatform()).getProjectBuildDirNames(array[1])) {
-						if(buildDir.child(configBuildDirNameTemp).isDirectory()) {
-							configBuildDirName = configBuildDirNameTemp;
-							break;
-						}
-					}
-						
-					if(configBuildDirName == null) {
-						returnCodes.add(false);
-						continue;	
-					}
-					
-					FilePath tempBuildDir = buildDir.child(configBuildDirName);
-
-					if(tempBuildDir.act(new AppArchiverCallable(array[0], createFilename(build, array[0], array[1]))))
+					if(tempBuildDir != null && tempBuildDir.act(new AppArchiverCallable(array[0], createFilename(build, array[0], array[1]))))
 						returnCodes.add(true);
 					else
 						returnCodes.add(false);
@@ -296,24 +282,10 @@ public class XcodeBuilder extends Builder {
 					}
 						
 					String[] array = toCreateIpa.split(FIELD_DELIMITER_REGEX);
-					
-					String configBuildDirName = null;
-					
-					for(String configBuildDirNameTemp: XcodePlatform.fromString(getXcodePlatform()).getProjectBuildDirNames(array[1])) {
-						if(buildDir.child(configBuildDirNameTemp).isDirectory()) {
-							configBuildDirName = configBuildDirNameTemp;
-							break;
-						}
-					}
 						
-					if(configBuildDirName == null) {
-						returnCodes.add(false);
-						continue;	
-					}
+					FilePath tempBuildDir = getBuildDir(buildDir, array[1]);
 					
-					FilePath tempBuildDir = buildDir.child(configBuildDirName);
-					
-					if(tempBuildDir.act(new IpaPackagerCallable(array[0], createFilename(build, array[0], array[1]))))
+					if(tempBuildDir != null && tempBuildDir.act(new IpaPackagerCallable(array[0], createFilename(build, array[0], array[1]))))
 						returnCodes.add(true);
 					else
 						returnCodes.add(false);
@@ -331,11 +303,9 @@ public class XcodeBuilder extends Builder {
     }
     
     private Set<String> getToPerformStep(String cmd, boolean force) {
-    	//String[] keys = (String[]) this.data.keySet().toArray(new String[this.data.size()]);
-    	Set<String> keys = this.data.keySet();
     	Set<String> toPerformStep = new HashSet<String>();
     	
-    	for(String key: keys) {
+    	for(String key: this.data.keySet()) {
 			if(StringUtils.countMatches(key, FIELD_DELIMITER) < 2)
 				continue;
 			
@@ -350,6 +320,26 @@ public class XcodeBuilder extends Builder {
     	return toPerformStep;
     }
     
+    private FilePath getBuildDir(FilePath buildDir, String configurationName) {
+		String configBuildDirName = null;
+		
+		try {
+			for(String configBuildDirNameTemp: XcodePlatform.fromString(getXcodePlatform()).getProjectBuildDirNames(configurationName)) {
+				if(buildDir.child(configBuildDirNameTemp).isDirectory()) {
+					configBuildDirName = configBuildDirNameTemp;
+					break;
+				}
+			}
+		} catch (Exception e) {
+			return null;
+		}
+			
+		if(configBuildDirName == null)
+			return null;	
+		else
+			return buildDir.child(configBuildDirName);
+    }
+    
     private List<String> createArgs(String arg) {
     	List<String> cmds = new ArrayList<String>();
     	String[] args = arg.split(FIELD_DELIMITER_REGEX);
@@ -360,9 +350,9 @@ public class XcodeBuilder extends Builder {
 		cmds.add(args[1]);
 		
 		if(getBooleanPreference(args[0] + FIELD_DELIMITER + UNIT_TEST_TARGET_ARG)) {
-			if(getXcodePlatform().equals("iOS")) {
+			if(getXcodePlatform().equals(XcodePlatform.IOS.getXcodePlatformName())) {
 				cmds.add("-sdk");
-				cmds.add("iphonesimulator");
+				cmds.add(XcodePlatform.IOS_SIMULATOR.getXcodePlatformSdkName());
 			}
     	}
 		
@@ -566,8 +556,8 @@ public class XcodeBuilder extends Builder {
         	return this.currentProjectDir;
         }
         
-        public String[] getXcodePlatforms() {
-        	return XcodePlatform.getXcodePlatforms();
+        public String[] getXcodePlatformNames() {
+        	return XcodePlatform.getXcodePlatformNames();
         }
         
         public String getXcodePlatform() {

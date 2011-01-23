@@ -1,4 +1,4 @@
-package com.sic.bb.hudson.plugins.xcodeplugin.util;
+package com.sic.bb.hudson.plugins.xcodeplugin.io;
 
 import hudson.FilePath;
 

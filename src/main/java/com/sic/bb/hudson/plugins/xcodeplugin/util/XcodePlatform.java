@@ -5,8 +5,19 @@ import java.util.List;
 
 
 public enum XcodePlatform {
-	MAC_OS_X("Mac OS X"),
-	IOS("iOS")
+	MAC_OS_X("Mac OS X","macosx")
+	{
+		public List<String> getProjectBuildDirNames(String configurationName) {
+			if(configurationName == null)
+				return null;
+			
+			List<String> projectBuildDirNames = new ArrayList<String>();
+			projectBuildDirNames.add(configurationName);
+			
+			return projectBuildDirNames;
+		}
+	},
+	IOS("iOS","iphoneos")
 	{
 		public List<String> getProjectBuildDirNames(String configurationName) {
 			if(configurationName == null)
@@ -19,7 +30,7 @@ public enum XcodePlatform {
 			return projectBuildDirNames;
 		}
 	},
-	IOS_SIMULATOR("iOS Simulator")
+	IOS_SIMULATOR("iOS Simulator","iphonesimulator")
 	{
 		public List<String> getProjectBuildDirNames(String configurationName) {
 			if(configurationName == null)
@@ -33,40 +44,40 @@ public enum XcodePlatform {
 		}
 	};
 	
-	private final String xcodePlatform;
+	private final String xcodePlatformName;
+	private final String xcodePlatformSdkName;
 	
-	XcodePlatform(String xcodePlatform) {
-		this.xcodePlatform = xcodePlatform;
+	XcodePlatform(String xcodePlatformName, String xcodePlatformSdkName) {
+		this.xcodePlatformName = xcodePlatformName;
+		this.xcodePlatformSdkName = xcodePlatformSdkName;
 	}
 	
-	public String getXcodePlatform() {
-		return this.xcodePlatform;
+	public String getXcodePlatformName() {
+		return this.xcodePlatformName;
+	}
+	
+	public String getXcodePlatformSdkName() {
+		return this.xcodePlatformSdkName;
 	}
 	
 	public List<String> getProjectBuildDirNames(String configurationName) {
-		if(configurationName == null)
-			return null;
-		
-		List<String> projectBuildDirNames = new ArrayList<String>();
-		projectBuildDirNames.add(configurationName);
-		
-		return projectBuildDirNames;
+		return new ArrayList<String>();
 	}
 	
 	public static XcodePlatform fromString(String xcodePlatform) {
 		if(xcodePlatform != null)
 			for(XcodePlatform platForm: XcodePlatform.values())
-				if(xcodePlatform.equals(platForm.getXcodePlatform()))
+				if(xcodePlatform.equals(platForm.getXcodePlatformName()))
 					return platForm;
 		
 		return null;
 	}
 	
-	public static String[] getXcodePlatforms() {
+	public static String[] getXcodePlatformNames() {
        	List<String> xcodePlatforms = new ArrayList<String>();
     	
     	for(XcodePlatform xcodePlatform: XcodePlatform.values())
-    		xcodePlatforms.add(xcodePlatform.getXcodePlatform());
+    		xcodePlatforms.add(xcodePlatform.getXcodePlatformName());
     	
     	return (String[]) xcodePlatforms.toArray(new String[xcodePlatforms.size()]);
 	}
