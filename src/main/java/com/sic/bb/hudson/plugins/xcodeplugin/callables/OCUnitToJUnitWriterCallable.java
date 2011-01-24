@@ -16,6 +16,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
 
+import com.sic.bb.hudson.plugins.xcodeplugin.filefilter.XmlFileFilter;
 import com.sic.bb.hudson.plugins.xcodeplugin.ocunit.OCUnitTestCase;
 import com.sic.bb.hudson.plugins.xcodeplugin.ocunit.OCUnitTestCaseError;
 import com.sic.bb.hudson.plugins.xcodeplugin.ocunit.OCUnitTestCaseResult;
@@ -26,6 +27,8 @@ import hudson.remoting.VirtualChannel;
 
 public class OCUnitToJUnitWriterCallable implements FileCallable<Boolean>{
 	private static final long serialVersionUID = 1L;
+	
+	public static final String filePreamble = "TEST-";
 	
 	private final Vector<OCUnitTestSuite> testSuites;
 	
@@ -80,7 +83,8 @@ public class OCUnitToJUnitWriterCallable implements FileCallable<Boolean>{
 	        	document.appendChild(testSuiteElement);
 	        	
 	        	// StreamResult got a problem with spaces in file path
-	        	FileOutputStream fileOutputStream = new FileOutputStream(new File(dir,"TEST-" + testSuite.getTestSuiteName() + ".xml"));
+	        	FileOutputStream fileOutputStream = 
+	        		new FileOutputStream(new File(dir,filePreamble + testSuite.getTestSuiteName() + XmlFileFilter.FILE_ENDING));
 	        		        	
 	            transformer.transform(new DOMSource(document), new StreamResult(fileOutputStream));
 	        }

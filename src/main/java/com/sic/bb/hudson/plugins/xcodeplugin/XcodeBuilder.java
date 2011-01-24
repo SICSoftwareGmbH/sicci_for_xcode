@@ -53,7 +53,7 @@ import com.sic.bb.hudson.plugins.xcodeplugin.callables.IpaPackagerCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.callables.XcodeProjectSearchCallable;
 import com.sic.bb.hudson.plugins.xcodeplugin.cli.SecurityCommandCaller;
 import com.sic.bb.hudson.plugins.xcodeplugin.cli.XcodebuildCommandCaller;
-import com.sic.bb.hudson.plugins.xcodeplugin.io.XcodebuildCommandOutputParser;
+import com.sic.bb.hudson.plugins.xcodeplugin.io.XcodebuildOutputParser;
 import com.sic.bb.hudson.plugins.xcodeplugin.util.PluginUtils;
 import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodePlatform;
 
@@ -130,23 +130,23 @@ public class XcodeBuilder extends Builder {
     
     public String[] getAvailableSdks(FilePath workspace) {
     	if(getProjectDir() != null)
-    		return XcodebuildCommandOutputParser.getAvailableSdks(workspace.child(getProjectDir()));
+    		return XcodebuildOutputParser.getAvailableSdks(workspace.child(getProjectDir()));
     	
-    	return XcodebuildCommandOutputParser.getAvailableSdks(workspace);
+    	return XcodebuildOutputParser.getAvailableSdks(workspace);
     }
 
     public String[] getBuildConfigurations(FilePath workspace) {
     	if(getProjectDir() != null)
-    		return XcodebuildCommandOutputParser.getBuildConfigurations(workspace.child(getProjectDir()));
+    		return XcodebuildOutputParser.getBuildConfigurations(workspace.child(getProjectDir()));
 
-    	return XcodebuildCommandOutputParser.getBuildConfigurations(workspace);
+    	return XcodebuildOutputParser.getBuildConfigurations(workspace);
     }
     
     public String[] getBuildTargets(FilePath workspace) {
     	if(getProjectDir() != null)
-    		return XcodebuildCommandOutputParser.getBuildTargets(workspace.child(getProjectDir()));
+    		return XcodebuildOutputParser.getBuildTargets(workspace.child(getProjectDir()));
 
-    	return XcodebuildCommandOutputParser.getBuildTargets(workspace);
+    	return XcodebuildOutputParser.getBuildTargets(workspace);
     }
     
     @Override
@@ -167,12 +167,15 @@ public class XcodeBuilder extends Builder {
 			return false;
 		}
 		
-        if(getProjectDir() != null)
-			workspace = workspace.child(getProjectDir());
+		if(!XcodebuildCommandCaller.getInstance().check(workspace.getChannel(), listener))
+			return false;
 		
-		try {
-			if(!XcodebuildCommandCaller.getInstance().check(workspace.getChannel(), listener))
-				return false;
+		if(!SecurityCommandCaller.getInstance().check(workspace.getChannel(), listener))
+			return false;
+		
+		try {			
+	        if(getProjectDir() != null)
+				workspace = workspace.child(getProjectDir());
 			
 			if(!workspace.exists()) {
 				listener.fatalError(Messages.XcodeBuilder_prebuild_projectDirNotFound() + ": " + workspace);
@@ -180,30 +183,31 @@ public class XcodeBuilder extends Builder {
 			} else
 				this.currentProjectDirectory = workspace;
 		} catch(Exception e) {
-			// TODO
+			listener.fatalError(Messages.XcodeBuilder_prebuild_projectDirNotFound() + ": " + workspace);
+			return false;
 		}
 		
 		XcodeUserNodeProperty property = XcodeUserNodeProperty.getCurrentNodesProperties();
 		
 		if(property == null) {
-			listener.fatalError("xcode preferences not set");
+			listener.fatalError(Messages.XcodeBuilder_prebuild_loginCredentialNotSet());
 			return false;
 		}
 		
 		this.currentUsername = property.getUsername();
 		this.currentPassword = property.getPassword();
 		
+		/*
 		if(this.currentUsername == null) {
-			// TODO
 			listener.fatalError("xcode username not set");
 			return false;
 		}
 		
 		if(this.currentPassword == null) {
-			// TODO
 			listener.fatalError("xcode password not set");
 			return false;
 		}
+		*/
 		
     	return true;
     }
@@ -223,15 +227,19 @@ public class XcodeBuilder extends Builder {
         
         try {
         	EnvVars envVars = build.getEnvironment(listener);
-
+        	
+        	logger.println("\n" + Messages.XcodeBuilder_perform_cleanStarted());
 			
 			if(!(descr.getCleanBeforeBuildGlobal() && !descr.getCleanBeforeBuild()))
 				for(String toClean: getToPerformStep(CLEAN_BEFORE_BUILD_ARG,(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
 					returnCodes.add(XcodebuildCommandCaller.getInstance().clean(launcher, envVars, listener, workspace, createArgs(toClean)));
 			
-
+			logger.println(Messages.XcodeBuilder_perform_cleanFinished());
+			
 			if(!SecurityCommandCaller.getInstance().unlockKeychain(envVars, listener, workspace, this.currentUsername, this.currentPassword))
 				return false;
+			
+			logger.println(Messages.XcodeBuilder_perform_buildStarted());
 			
 			for(String toBuild: getToPerformStep(BUILD_ARG,true)) {
 				rcode = XcodebuildCommandCaller.getInstance().build(launcher, envVars, listener, workspace, this.currentBuildIsUnitTest, createArgs(toBuild));
@@ -242,8 +250,11 @@ public class XcodeBuilder extends Builder {
 				returnCodes.add(rcode);
 			}
 			
+			logger.println(Messages.XcodeBuilder_perform_buildFinished());
 			
 			FilePath buildDir = workspace.child(BUILD_FOLDER_NAME);
+			
+			logger.println(Messages.XcodeBuilder_perform_appArchiveStarted());
 			
 			if(!(descr.getArchiveAppGlobal() && !descr.getArchiveApp())) {	
 				for(String toArchiveApp: getToPerformStep(ARCHIVE_APP_ARG,(descr.getArchiveAppGlobal() && descr.getArchiveApp()))) {
@@ -261,6 +272,8 @@ public class XcodeBuilder extends Builder {
 				}
 			}
 			
+			logger.println(Messages.XcodeBuilder_perform_appArchiveFinished());
+			logger.println("\n" + Messages.XcodeBuilder_perform_createIpaStarted());
 			
 			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
 				for(String toCreateIpa: getToPerformStep(CREATE_IPA_ARG,(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
@@ -277,6 +290,10 @@ public class XcodeBuilder extends Builder {
 						returnCodes.add(false);
 				}
 			}
+			
+			logger.println(Messages.XcodeBuilder_perform_createIpaFinished());
+			
+			logger.println("\n" + Messages.XcodeBuilder_perform_finished());
 			
 			if(returnCodes.contains(false))
 				return false;
@@ -619,7 +636,6 @@ public class XcodeBuilder extends Builder {
 			try {
 				projectDirs.addAll(workspace.act(new XcodeProjectSearchCallable(searchDepth)));
 			} catch (Exception e) {
-				// TODO
 			}
 			
         	String[] projectDirsArray = new String[projectDirs.size()];
@@ -635,15 +651,15 @@ public class XcodeBuilder extends Builder {
         }
         
         public static String[] getBuildConfigurations(FilePath workspace) {
-        	return XcodebuildCommandOutputParser.getBuildConfigurations(workspace);
+        	return XcodebuildOutputParser.getBuildConfigurations(workspace);
         }
         
         public static String[] getBuildTargets(FilePath workspace) {
-        	return XcodebuildCommandOutputParser.getBuildTargets(workspace);
+        	return XcodebuildOutputParser.getBuildTargets(workspace);
         }
         
         public static String[] getAvailableSdks(FilePath workspace) {
-			return XcodebuildCommandOutputParser.getAvailableSdks(workspace);
+			return XcodebuildOutputParser.getAvailableSdks(workspace);
         }
         
         /* <j:getStatic> doesn't work -> classloader doesn't find needed class */

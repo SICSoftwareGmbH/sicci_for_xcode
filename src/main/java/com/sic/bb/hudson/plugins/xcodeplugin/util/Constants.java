@@ -13,6 +13,8 @@ public final class Constants {
 	
 	public static final String BUILD_FOLDER_NAME = "build";
 	
+	public static final String TEST_FOLDER_NAME = "test-reports";
+	
 	public static final String FIELD_DELIMITER = "|-|";
 	
 	public static final String BUILD_ARG = "build";

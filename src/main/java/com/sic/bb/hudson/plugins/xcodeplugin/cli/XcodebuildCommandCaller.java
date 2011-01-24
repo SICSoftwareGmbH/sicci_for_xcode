@@ -1,7 +1,7 @@
 package com.sic.bb.hudson.plugins.xcodeplugin.cli;
 
-
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.RETURN_OK;
+import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.TEST_FOLDER_NAME;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -69,7 +69,7 @@ public class XcodebuildCommandCaller {
 			if(testSuites.size() == 0)
 				return rcode;
 			
-			FilePath testReports = workspace.child("test-reports");
+			FilePath testReports = workspace.child(TEST_FOLDER_NAME);
 			
 			if(!testReports.exists())
 				testReports.mkdirs();
