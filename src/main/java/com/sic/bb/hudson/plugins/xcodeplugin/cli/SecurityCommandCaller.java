@@ -2,7 +2,7 @@ package com.sic.bb.hudson.plugins.xcodeplugin.cli;
 
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.RETURN_OK;
 
-import com.sic.bb.hudson.plugins.xcodeplugin.io.XcodeFilteredOutputStream;
+import com.sic.bb.hudson.plugins.xcodeplugin.io.MaskedOutputStream;
 
 import hudson.EnvVars;
 import hudson.FilePath;
@@ -37,7 +37,7 @@ public class SecurityCommandCaller {
 	}
 
 	public boolean unlockKeychain(EnvVars envVars, TaskListener listener, FilePath workspace, String username, String password) {
-		XcodeFilteredOutputStream outputStream = new XcodeFilteredOutputStream(listener.getLogger(), password);
+		MaskedOutputStream outputStream = new MaskedOutputStream(listener.getLogger(), password);
 		
 		try {
 			Launcher launcher = workspace.createLauncher(new StreamTaskListener(outputStream));
@@ -80,7 +80,7 @@ public class SecurityCommandCaller {
 	}
 
 	public boolean createKeychain(EnvVars envVars, TaskListener listener, FilePath workspace, String username, String password) {
-		XcodeFilteredOutputStream outputStream = new XcodeFilteredOutputStream(listener.getLogger(), password);
+		MaskedOutputStream outputStream = new MaskedOutputStream(listener.getLogger(), password);
 		
 		try {
 			Launcher launcher = workspace.createLauncher(new StreamTaskListener(outputStream));

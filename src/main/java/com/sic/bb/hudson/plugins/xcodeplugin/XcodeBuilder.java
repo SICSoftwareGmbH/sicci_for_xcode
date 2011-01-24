@@ -1,13 +1,13 @@
 package com.sic.bb.hudson.plugins.xcodeplugin;
 
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.ARCHIVE_APP_ARG;
+import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.BUILD_ARG;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.BUILD_FOLDER_NAME;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.CLEAN_BEFORE_BUILD_ARG;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.CREATE_IPA_ARG;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.DEFAULT_FILENAME_TEMPLATE;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.DEFAULT_XCODE_PROJECT_SEARCH_DEPTH;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.FIELD_DELIMITER;
-import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.FIELD_DELIMITER_REGEX;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.MAX_XCODE_PROJECT_SEARCH_DEPTH;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.MIN_XCODE_PROJECT_SEARCH_DEPTH;
 import static com.sic.bb.hudson.plugins.xcodeplugin.util.Constants.TRUE;
@@ -54,6 +54,7 @@ import com.sic.bb.hudson.plugins.xcodeplugin.callables.XcodeProjectSearchCallabl
 import com.sic.bb.hudson.plugins.xcodeplugin.cli.SecurityCommandCaller;
 import com.sic.bb.hudson.plugins.xcodeplugin.cli.XcodebuildCommandCaller;
 import com.sic.bb.hudson.plugins.xcodeplugin.io.XcodebuildCommandOutputParser;
+import com.sic.bb.hudson.plugins.xcodeplugin.util.PluginUtils;
 import com.sic.bb.hudson.plugins.xcodeplugin.util.XcodePlatform;
 
 public class XcodeBuilder extends Builder {
@@ -62,6 +63,7 @@ public class XcodeBuilder extends Builder {
     private transient FilePath currentProjectDirectory;
     private transient String currentUsername;
     private transient String currentPassword;
+    private transient boolean currentBuildIsUnitTest; 
 
     public XcodeBuilder(Map<String,String> data) {
     	this.data = data;
@@ -221,23 +223,18 @@ public class XcodeBuilder extends Builder {
         
         try {
         	EnvVars envVars = build.getEnvironment(listener);
-			
-			// <cleanup>
+
 			
 			if(!(descr.getCleanBeforeBuildGlobal() && !descr.getCleanBeforeBuild()))
 				for(String toClean: getToPerformStep(CLEAN_BEFORE_BUILD_ARG,(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
-					returnCodes.add(XcodebuildCommandCaller.getInstance().clean(envVars, listener, workspace, createArgs(toClean)));
+					returnCodes.add(XcodebuildCommandCaller.getInstance().clean(launcher, envVars, listener, workspace, createArgs(toClean)));
 			
-			// </cleanup>
-			
-			// <build>
 
 			if(!SecurityCommandCaller.getInstance().unlockKeychain(envVars, listener, workspace, this.currentUsername, this.currentPassword))
 				return false;
-
 			
-			for(String toBuild: getToPerformStep("build",true)) {
-				rcode = XcodebuildCommandCaller.getInstance().build(envVars, listener, workspace, createArgs(toBuild));
+			for(String toBuild: getToPerformStep(BUILD_ARG,true)) {
+				rcode = XcodebuildCommandCaller.getInstance().build(launcher, envVars, listener, workspace, this.currentBuildIsUnitTest, createArgs(toBuild));
 				
 				if(!rcode)
 					blackList.add(toBuild);
@@ -245,21 +242,15 @@ public class XcodeBuilder extends Builder {
 				returnCodes.add(rcode);
 			}
 			
-			// </build>
-			
 			
 			FilePath buildDir = workspace.child(BUILD_FOLDER_NAME);
 			
-			// <archive app>
-			
 			if(!(descr.getArchiveAppGlobal() && !descr.getArchiveApp())) {	
 				for(String toArchiveApp: getToPerformStep(ARCHIVE_APP_ARG,(descr.getArchiveAppGlobal() && descr.getArchiveApp()))) {
-					if(blackList.contains(toArchiveApp)) {
-						returnCodes.add(false);
+					if(blackList.contains(toArchiveApp))
 						continue;
-					}
 						
-					String[] array = toArchiveApp.split(FIELD_DELIMITER_REGEX);
+					String[] array = toArchiveApp.split(PluginUtils.stringToRegex(FIELD_DELIMITER));
 					
 					FilePath tempBuildDir = getBuildDir(buildDir, array[1]);
 					
@@ -270,18 +261,13 @@ public class XcodeBuilder extends Builder {
 				}
 			}
 			
-			// </archive app>
-			
-			// <create ipa>
 			
 			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
 				for(String toCreateIpa: getToPerformStep(CREATE_IPA_ARG,(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
-					if(blackList.contains(toCreateIpa)) {
-						returnCodes.add(false);
+					if(blackList.contains(toCreateIpa))
 						continue;
-					}
 						
-					String[] array = toCreateIpa.split(FIELD_DELIMITER_REGEX);
+					String[] array = toCreateIpa.split(PluginUtils.stringToRegex(FIELD_DELIMITER));
 						
 					FilePath tempBuildDir = getBuildDir(buildDir, array[1]);
 					
@@ -292,9 +278,10 @@ public class XcodeBuilder extends Builder {
 				}
 			}
 			
-			// </create ipa>
+			if(returnCodes.contains(false))
+				return false;
 			
-			return !returnCodes.contains(false);
+			return true;
 		} catch (Exception e) {
 			logger.println(e.getStackTrace());
 		}
@@ -309,9 +296,9 @@ public class XcodeBuilder extends Builder {
 			if(StringUtils.countMatches(key, FIELD_DELIMITER) < 2)
 				continue;
 			
-			String[] fields = key.split(FIELD_DELIMITER_REGEX);
+			String[] fields = key.split(PluginUtils.stringToRegex(FIELD_DELIMITER));
 			
-			if(!cmd.equals("build") && (!fields[fields.length - 1].equals(cmd) || (!force && !this.data.get(key).equals(TRUE))))
+			if(!cmd.equals(BUILD_ARG) && (!fields[fields.length - 1].equals(cmd) || (!force && !this.data.get(key).equals(TRUE))))
 				continue;
 			
 			toPerformStep.add(fields[0] + FIELD_DELIMITER + fields[1]);
@@ -342,7 +329,7 @@ public class XcodeBuilder extends Builder {
     
     private List<String> createArgs(String arg) {
     	List<String> cmds = new ArrayList<String>();
-    	String[] args = arg.split(FIELD_DELIMITER_REGEX);
+    	String[] args = arg.split(PluginUtils.stringToRegex(FIELD_DELIMITER));
 		
 		cmds.add("-target");
 		cmds.add(args[0]);
@@ -354,7 +341,10 @@ public class XcodeBuilder extends Builder {
 				cmds.add("-sdk");
 				cmds.add(XcodePlatform.IOS_SIMULATOR.getXcodePlatformSdkName());
 			}
-    	}
+			
+			this.currentBuildIsUnitTest = true;
+    	} else
+    		this.currentBuildIsUnitTest = false;
 		
 		return cmds;
     }
@@ -578,7 +568,6 @@ public class XcodeBuilder extends Builder {
         	
         	req.getView(this,'/' + XcodeBuilder.class.getName().replaceAll("\\.","\\/")  + "/targets.jelly").forward(req, rsp);
         	
-        	// to fix a race condition
         	this.currentProjectDir = null;
         }
         

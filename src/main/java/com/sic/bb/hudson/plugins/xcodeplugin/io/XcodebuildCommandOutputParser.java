@@ -28,7 +28,7 @@ public final class XcodebuildCommandOutputParser {
     public static String[] getAvailableSdks(FilePath workspace) {
 		ArrayList<String> sdks = new ArrayList<String>();
 		
-		String sdksString = XcodebuildCommandCaller.getInstance().callReturnString(workspace,"-list");
+		String sdksString = XcodebuildCommandCaller.getInstance().getOutput(workspace,"-list");
 		
 		if(StringUtils.isBlank(sdksString))
 			return new String[0];
@@ -47,7 +47,7 @@ public final class XcodebuildCommandOutputParser {
 		ArrayList<String> items = new ArrayList<String>();
 		boolean found = false;
 		
-		String itemsString = XcodebuildCommandCaller.getInstance().callReturnString(workspace,"-list");
+		String itemsString = XcodebuildCommandCaller.getInstance().getOutput(workspace,"-list");
 		
 		if(StringUtils.isBlank(itemsString))
 			return new String[0];

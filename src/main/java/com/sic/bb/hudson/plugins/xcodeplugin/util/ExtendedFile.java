@@ -12,7 +12,7 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 
-public final class ExtendedFile extends File {
+public class ExtendedFile extends File {
 	private static final long serialVersionUID = 1L;
 
 	public ExtendedFile(File parent, String child) {

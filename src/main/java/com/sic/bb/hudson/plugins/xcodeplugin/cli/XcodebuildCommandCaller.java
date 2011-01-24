@@ -12,6 +12,11 @@ import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Vector;
+
+import com.sic.bb.hudson.plugins.xcodeplugin.callables.OCUnitToJUnitWriterCallable;
+import com.sic.bb.hudson.plugins.xcodeplugin.io.ParsedOutputStream;
+import com.sic.bb.hudson.plugins.xcodeplugin.ocunit.OCUnitTestSuite;
 
 public class XcodebuildCommandCaller {
 	public static final String XCODEBUILD_COMMAND = "/usr/bin/xcodebuild";
@@ -46,33 +51,48 @@ public class XcodebuildCommandCaller {
 		return false;
 	}
 
-	public boolean build(EnvVars envVars, TaskListener listener, FilePath workspace, List<String> args) {
+	public boolean build(Launcher launcher, EnvVars envVars, TaskListener listener, FilePath workspace, boolean isUnitTest, List<String> args) {
 		args.add("build");
 		
-		try {
-			// TODO
-			Launcher launcher = workspace.createLauncher(listener);
-			return callReturnBoolean(launcher, envVars, listener, workspace, args);
+		try {			
+			if(!isUnitTest)
+				return call(launcher, envVars, listener, workspace, args);
+			
+			ParsedOutputStream outputStream = new ParsedOutputStream(listener.getLogger());
+			listener = new StreamTaskListener(outputStream);
+			launcher = workspace.createLauncher(listener);
+			
+			boolean rcode = call(launcher, envVars, listener, workspace, args);
+			
+			Vector<OCUnitTestSuite> testSuites = outputStream.getParsedTests();
+			
+			if(testSuites.size() == 0)
+				return rcode;
+			
+			FilePath testReports = workspace.child("test-reports");
+			
+			if(!testReports.exists())
+				testReports.mkdirs();
+			
+			return testReports.act(new OCUnitToJUnitWriterCallable(testSuites));
 		} catch (Exception e) {
 		}
 
 		return false;
 	}
 
-	public boolean clean(EnvVars envVars, TaskListener listener, FilePath workspace, List<String> args) {
+	public boolean clean(Launcher launcher, EnvVars envVars, TaskListener listener, FilePath workspace, List<String> args) {
 		args.add("clean");
 		
 		try {
-			// TODO
-			Launcher launcher = workspace.createLauncher(listener);
-			return callReturnBoolean(launcher, envVars, listener, workspace, args);
+			return call(launcher, envVars, listener, workspace, args);
 		} catch (Exception e) {
 		}
 
 		return false;
 	}
 
-	public String callReturnString(FilePath workspace, String arg) {
+	public String getOutput(FilePath workspace, String arg) {
 		// TODO workspace.toString() will be called (deprecated)
 		if (this.workspaceTemp != null
 				&& this.workspaceTemp.equals(workspace + arg))
@@ -97,7 +117,7 @@ public class XcodebuildCommandCaller {
 		return this.xcodebuildOutputTemp;
 	}
 
-	private boolean callReturnBoolean(Launcher launcher, EnvVars envVars,
+	private boolean call(Launcher launcher, EnvVars envVars,
 			TaskListener listener, FilePath workspace, List<String> args) {
 		args.add(0, XCODEBUILD_COMMAND);
 
