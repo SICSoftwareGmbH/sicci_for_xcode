@@ -27,14 +27,16 @@
 				
 				<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(entry_preamble)}">
 					<td>
-					<table style="width:100%; padding:5px 0 5px 23px">
+					<table style="width:100%; padding:0 0 0 23px">
 						<tr>
-							<td><table>
-								<xb:singleEntry title="${%unit test target}:" help="help-unittesttarget.html" titleStyle="vertical-align:middle;">									
-									<j:set var="entry" value="${entry_preamble + unit_test_target_arg}" />
-									<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
-								</xb:singleEntry>
-							</table></td>
+							<td>
+								<table style="width:100%; padding:0 0 0 13px;">
+									<xb:singleEntry title="${%unit test target}:" help="help-unittesttarget.html" titleStyle="vertical-align:middle;">									
+										<j:set var="entry" value="${entry_preamble + unit_test_target_arg}" />
+										<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
+									</xb:singleEntry>
+								</table>
+							</td>
 						</tr>
 						
 						<tr>
