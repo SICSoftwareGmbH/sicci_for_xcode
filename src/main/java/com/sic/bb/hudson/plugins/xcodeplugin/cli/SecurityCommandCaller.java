@@ -52,7 +52,7 @@ public class SecurityCommandCaller {
 		}
 
 		listener.fatalError(SECURITY_COMMAND + ": "
-				+ Messages.SecurityCommandCaller_check_commandNotFound());
+				+ Messages.SecurityCommandCaller_check_commandNotFound() + "\n");
 		return false;
 	}
 

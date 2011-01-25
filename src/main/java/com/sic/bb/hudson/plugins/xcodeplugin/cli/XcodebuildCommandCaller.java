@@ -67,7 +67,7 @@ public class XcodebuildCommandCaller {
 		}
 
 		listener.fatalError(XCODEBUILD_COMMAND + ": "
-				+ Messages.XcodebuildCommandCaller_check_commandNotFound());
+				+ Messages.XcodebuildCommandCaller_check_commandNotFound() + "\n");
 		return false;
 	}
 

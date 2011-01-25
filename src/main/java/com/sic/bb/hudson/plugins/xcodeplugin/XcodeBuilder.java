@@ -181,6 +181,8 @@ public class XcodeBuilder extends Builder {
 		
 		// to empty cache of XcodebuildParser
         XcodebuildCommandCaller.getInstance().setWorkspaceTemp(workspace.getParent().getName());
+        
+        listener.getLogger().println("\n" + Messages.XcodeBuilder_prebuild_started() + "\n");
 		
 		if(!curComputer.getNode().createLauncher(listener).isUnix()) {
 			listener.fatalError(Messages.XcodeBuilder_prebuild_unixOnly());
@@ -203,31 +205,31 @@ public class XcodeBuilder extends Builder {
 			} else
 				this.currentProjectDirectory = workspace;
 		} catch(Exception e) {
-			listener.fatalError(Messages.XcodeBuilder_prebuild_projectDirNotFound() + ": " + workspace);
+			listener.fatalError(Messages.XcodeBuilder_prebuild_projectDirNotFound() + ": " + workspace + "\n");
 			return false;
 		}
 		
 		XcodeUserNodeProperty property = XcodeUserNodeProperty.getCurrentNodesProperties();
 		
 		if(property == null) {
-			listener.fatalError(Messages.XcodeBuilder_prebuild_loginCredentialNotSet());
+			listener.fatalError(Messages.XcodeBuilder_prebuild_loginCredentialNotSet() + "\n");
 			return false;
 		}
 		
 		this.currentUsername = property.getUsername();
 		this.currentPassword = property.getPassword();
 		
-		/*
 		if(this.currentUsername == null) {
-			listener.fatalError("xcode username not set");
+			listener.fatalError(Messages.XcodeBuilder_prebuild_usernameNotSet() + "\n");
 			return false;
 		}
 		
 		if(this.currentPassword == null) {
-			listener.fatalError("xcode password not set");
+			listener.fatalError(Messages.XcodeBuilder_prebuild_passwordNotSet() + "\n");
 			return false;
 		}
-		*/
+		
+        listener.getLogger().println(Messages.XcodeBuilder_prebuild_finished() + "\n");
 		
     	return true;
     }
@@ -243,23 +245,23 @@ public class XcodeBuilder extends Builder {
 		
         boolean rcode = true;
         
-        logger.println(Messages.XcodeBuilder_perform_started());
+        logger.println("\n" + Messages.XcodeBuilder_perform_started() + "\n");
         
         try {
         	EnvVars envVars = build.getEnvironment(listener);
         	
-        	logger.println("\n" + Messages.XcodeBuilder_perform_cleanStarted());
+        	logger.println(Messages.XcodeBuilder_perform_cleanStarted() + "\n");
 			
 			if(!(descr.getCleanBeforeBuildGlobal() && !descr.getCleanBeforeBuild()))
 				for(String toClean: getToPerformStep(CLEAN_BEFORE_BUILD_ARG,(descr.getCleanBeforeBuildGlobal() && descr.getCleanBeforeBuild())))
 					returnCodes.add(XcodebuildCommandCaller.getInstance().clean(launcher, envVars, listener, workspace, createArgs(toClean)));
 			
-			logger.println(Messages.XcodeBuilder_perform_cleanFinished());
+			logger.println(Messages.XcodeBuilder_perform_cleanFinished() + "\n\n");
 			
 			if(!SecurityCommandCaller.getInstance().unlockKeychain(envVars, listener, workspace, this.currentUsername, this.currentPassword))
 				return false;
 			
-			logger.println(Messages.XcodeBuilder_perform_buildStarted());
+			logger.println(Messages.XcodeBuilder_perform_buildStarted() + "\n");
 			
 			for(String toBuild: getToPerformStep(BUILD_ARG,true)) {
 				rcode = XcodebuildCommandCaller.getInstance().build(launcher, envVars, listener, workspace, this.currentBuildIsUnitTest, createArgs(toBuild));
@@ -270,11 +272,11 @@ public class XcodeBuilder extends Builder {
 				returnCodes.add(rcode);
 			}
 			
-			logger.println(Messages.XcodeBuilder_perform_buildFinished());
+			logger.println(Messages.XcodeBuilder_perform_buildFinished() + "\n\n");
 			
 			FilePath buildDir = workspace.child(BUILD_FOLDER_NAME);
 			
-			logger.println(Messages.XcodeBuilder_perform_appArchiveStarted());
+			logger.println(Messages.XcodeBuilder_perform_appArchiveStarted() + "\n");
 			
 			if(!(descr.getArchiveAppGlobal() && !descr.getArchiveApp())) {	
 				for(String toArchiveApp: getToPerformStep(ARCHIVE_APP_ARG,(descr.getArchiveAppGlobal() && descr.getArchiveApp()))) {
@@ -292,8 +294,8 @@ public class XcodeBuilder extends Builder {
 				}
 			}
 			
-			logger.println(Messages.XcodeBuilder_perform_appArchiveFinished());
-			logger.println("\n" + Messages.XcodeBuilder_perform_createIpaStarted());
+			logger.println(Messages.XcodeBuilder_perform_appArchiveFinished() + "\n\n");
+			logger.println(Messages.XcodeBuilder_perform_createIpaStarted() + "\n");
 			
 			if(!(descr.getCreateIpaGlobal() && !descr.getCreateIpa())) {	
 				for(String toCreateIpa: getToPerformStep(CREATE_IPA_ARG,(descr.getCreateIpaGlobal() && descr.getCreateIpa()))) {
@@ -311,9 +313,9 @@ public class XcodeBuilder extends Builder {
 				}
 			}
 			
-			logger.println(Messages.XcodeBuilder_perform_createIpaFinished());
+			logger.println(Messages.XcodeBuilder_perform_createIpaFinished() + "\n\n");
 			
-			logger.println("\n" + Messages.XcodeBuilder_perform_finished());
+			logger.println(Messages.XcodeBuilder_perform_finished() + "\n\n");
 			
 			if(returnCodes.contains(false))
 				return false;
