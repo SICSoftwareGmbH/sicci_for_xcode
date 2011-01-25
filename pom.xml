@@ -8,7 +8,7 @@
   </parent>
 
   <groupId>com.sic.bb.hudson.plugins</groupId>
-  <artifactId>xcodeplugin</artifactId>
+  <artifactId>sicci_for_xcode</artifactId>
   <name>SICCI for Xcode Plugin</name>
   <version>0.0.6</version>
   <packaging>hpi</packaging>

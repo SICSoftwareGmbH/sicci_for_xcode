@@ -1,0 +1,143 @@
+<!--
+ * SICCI for Xcode - Hudson Plugin for Xcode projects
+ * 
+ * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ -->
+
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/sicci_for_xcode/XcodeBuilder/lib">
+	
+	<j:set var="builder" value="${attrs.builder}" />
+	<j:set var="descriptor" value="${attrs.descriptor}" />
+	<j:set var="projectDir" value="${attrs.projectDir}" />
+	
+	<!-- Targets/Buildconfigurations -->
+	
+	<j:set var="targets" value="${builder.getBuildTargets(projectDir)}" />
+	
+	<div id="targets">
+	<j:choose>
+		<j:when test="${targets.size() == 0}">
+			<span style="margin:15px 0px 10px 40px;">${%no target found}</span>
+		</j:when>
+		
+		<j:otherwise>
+			<j:set var="field_delimiter" value="${descriptor.getFieldDelimiter()}" />
+			<j:set var="unit_test_target_arg" value="${descriptor.getUnitTestTargetArg()}" />
+			<j:set var="clean_before_build_arg" value="${descriptor.getCleanBeforeBuildArg()}" />
+			<j:set var="archive_app_arg" value="${descriptor.getArchiveAppArg()}" />
+			<j:set var="create_ipa_arg" value="${descriptor.getCreateIpaArg()}" />
+		
+			<table style="width:100%; padding:0 0 0 20px;">
+			<j:forEach items="${targets}" var="target">
+				<j:set var="entry_preamble" value="${target + field_delimiter}" />
+				
+				<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(entry_preamble)}">
+					<td>
+					<table style="width:100%; padding:0 0 0 23px">
+						<tr>
+							<td>
+								<table style="width:100%; padding:0 0 0 13px;">
+									<xb:singleEntry title="${%unit test target}:" help="help-unittesttarget.html" titleStyle="vertical-align:middle;">									
+										<j:set var="entry" value="${entry_preamble + unit_test_target_arg}" />
+										<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
+									</xb:singleEntry>
+								</table>
+							</td>
+						</tr>
+						
+						<tr>
+							<td style="padding:0 0 5px 0;"><span style="font-weight:bold;">${%build configurations}:</span></td>
+						</tr>
+						
+						<j:forEach items="${builder.getBuildConfigurations(projectDir)}" var="configuration">
+							<j:set var="entry_preamble" value="${entry_preamble + configuration + field_delimiter}" />
+							<j:set var="subMenuUsed" value="${builder.subMenuUsed(entry_preamble)}" />
+							
+							<f:optionalBlock title="${configuration}" checked="${subMenuUsed}">
+								<td>
+								<table style="width:100%; padding:5px 0 0 13px;">
+									<xb:singleEntry title="${%clean before build}:" help="help-cleanbeforebuild.html" titleStyle="vertical-align:middle;">
+									<j:set var="entry" value="${entry_preamble + clean_before_build_arg}" />
+									<j:choose>
+										<j:when test="${descriptor.getCleanBeforeBuildGlobal()}">
+											<input type="checkbox" name="${entry}" checked="${descriptor.getCleanBeforeBuild() ? 'true' : null}" disabled="disabled" />
+										</j:when>
+										<j:otherwise>
+											<j:choose>
+												<j:when test="${subMenuUsed}">
+													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
+												</j:when>
+												<j:otherwise>
+													<f:checkbox name="${entry}" checked="${descriptor.getCleanBeforeBuild()}" />
+												</j:otherwise>
+											</j:choose>
+										</j:otherwise>
+									</j:choose>
+									</xb:singleEntry>
+									
+									<xb:singleEntry title="${%archive app}:" help="help-archiveapp.html" titleStyle="vertical-align:middle;">
+									<j:set var="entry" value="${entry_preamble + archive_app_arg}" />
+									<j:choose>
+										<j:when test="${descriptor.getArchiveAppGlobal()}">
+											<input type="checkbox" name="${entry}" checked="${descriptor.getArchiveApp() ? 'true' : null}" disabled="disabled" />
+										</j:when>
+										<j:otherwise>
+											<j:choose>
+												<j:when test="${subMenuUsed}">
+													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
+												</j:when>
+												<j:otherwise>
+													<f:checkbox name="${entry}" checked="${descriptor.getArchiveApp()}" />
+												</j:otherwise>
+											</j:choose>
+										</j:otherwise>
+									</j:choose>
+									</xb:singleEntry>
+									
+									<xb:singleEntry title="${%create ipa}:" help="help-createipa.html" titleStyle="vertical-align:middle;">
+									<j:set var="entry" value="${entry_preamble + create_ipa_arg}" />
+									<j:choose>
+										<j:when test="${descriptor.getCreateIpaGlobal()}">
+											<input type="checkbox" name="${entry}" checked="${descriptor.getCreateIpa() ? 'true' : null}" disabled="disabled" />
+										</j:when>
+										<j:otherwise>
+											<j:choose>
+												<j:when test="${subMenuUsed}">
+													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
+												</j:when>
+												<j:otherwise>
+													<f:checkbox name="${entry}" checked="${descriptor.getCreateIpa()}" />
+												</j:otherwise>
+											</j:choose>
+										</j:otherwise>
+									</j:choose>
+									</xb:singleEntry>
+									
+								</table>
+								</td>
+							</f:optionalBlock>
+						</j:forEach>
+					</table>
+					</td>
+				</f:optionalBlock>
+			</j:forEach>
+			</table>
+		</j:otherwise>
+	</j:choose>
+	</div>
+	
+</j:jelly>
