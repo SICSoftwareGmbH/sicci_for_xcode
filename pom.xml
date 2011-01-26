@@ -11,10 +11,18 @@
   <artifactId>sicci_for_xcode</artifactId>
   <name>SICCI for Xcode Plugin</name>
   <version>0.0.6</version>
-  <packaging>hpi</packaging>
-
-  <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
   <description>Plugin for Xcode projects</description>
+  <url>http://wiki.hudson-ci.org/display/HUDSON/SICCI+for+Xcode+Plugin</url>
+  <packaging>hpi</packaging>
+  
+  <developers>
+    <developer>
+      <id>bene</id>
+      <name>Benedikt Biallowons</name>
+      <email>benedikt@biallowons.de</email>
+    </developer>
+  </developers>
+  
   <repositories>
     <repository>
       <id>m.g.o-public</id>

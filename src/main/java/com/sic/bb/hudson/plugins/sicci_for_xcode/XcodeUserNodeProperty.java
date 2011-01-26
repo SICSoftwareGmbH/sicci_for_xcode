@@ -1,7 +1,7 @@
 /*
  * SICCI for Xcode - Hudson Plugin for Xcode projects
  * 
- * Copyright (C) 2011 Benedikt Biallowons, Rayko Enz, SIC! Software GmbH
+ * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
