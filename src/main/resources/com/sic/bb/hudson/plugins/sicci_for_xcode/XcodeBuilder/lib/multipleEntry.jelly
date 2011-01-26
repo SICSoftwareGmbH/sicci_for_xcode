@@ -37,7 +37,7 @@
 		</td>
 		<td style="${attrs.style}${attrs.helpStyle}">
 			<j:if test="${attrs.help != null}">
-				<a href="#" class="help-button" helpURL="${rootURL}/plugin/xcodeplugin/${attrs.help}"><img src="${imagesURL}/16x16/help.gif" alt="Help for feature: ${title}" /></a>
+				<a href="#" class="help-button" helpURL="${rootURL}/plugin/sicci_for_xcode/${attrs.help}"><img src="${imagesURL}/16x16/help.gif" alt="Help for feature: ${title}" /></a>
 			</j:if>
 		</td>
 	</tr>
