@@ -286,6 +286,9 @@ public class XcodeBuilder extends Builder {
 						
 					String[] array = toArchiveApp.split(PluginUtils.stringToRegex(FIELD_DELIMITER));
 					
+					if(getBooleanPreference(array[0] + FIELD_DELIMITER + UNIT_TEST_TARGET_ARG))
+						continue;
+					
 					FilePath tempBuildDir = getBuildDir(buildDir, array[1]);
 					
 					if(tempBuildDir != null && tempBuildDir.act(new AppArchiverCallable(array[0], createFilename(build, array[0], array[1]))))
@@ -304,6 +307,9 @@ public class XcodeBuilder extends Builder {
 						continue;
 						
 					String[] array = toCreateIpa.split(PluginUtils.stringToRegex(FIELD_DELIMITER));
+					
+					if(getBooleanPreference(array[0] + FIELD_DELIMITER + UNIT_TEST_TARGET_ARG))
+						continue;
 						
 					FilePath tempBuildDir = getBuildDir(buildDir, array[1]);
 					

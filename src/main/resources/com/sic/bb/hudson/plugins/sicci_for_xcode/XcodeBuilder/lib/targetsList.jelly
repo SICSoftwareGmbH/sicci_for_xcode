@@ -52,9 +52,8 @@
 							<td>
 								<table style="width:100%; padding:0 0 0 13px;">
 									<xb:singleEntry title="${%unit test target}:" help="help-unittesttarget.html" titleStyle="vertical-align:middle;">
-										<j:set var="isUnitTest" value="${builder.getBooleanPreference(entry_preamble_target + unit_test_target_arg)}" />
-										<j:set scope="parent" var="isUnitTest" value="${isUnitTest}" />
-										<f:checkbox name="${entry}" checked="${isUnitTest}" />
+										<j:set var="entry" value="${entry_preamble_target + unit_test_target_arg}" />
+										<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
 									</xb:singleEntry>
 								</table>
 							</td>
@@ -70,65 +69,7 @@
 							
 							<f:optionalBlock title="${configuration}" checked="${subMenuUsed}">
 								<td>
-								<table style="width:100%; padding:5px 0 0 13px;">
-									<xb:singleEntry title="${%clean before build}:" help="help-cleanbeforebuild.html" titleStyle="vertical-align:middle;">
-									<j:set var="entry" value="${entry_preamble_config + clean_before_build_arg}" />
-									<j:choose>
-										<j:when test="${descriptor.getCleanBeforeBuildGlobal()}">
-											<input type="checkbox" name="${entry}" checked="${descriptor.getCleanBeforeBuild() ? 'true' : null}" disabled="disabled" />
-										</j:when>
-										<j:otherwise>
-											<j:choose>
-												<j:when test="${subMenuUsed}">
-													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
-												</j:when>
-												<j:otherwise>
-													<f:checkbox name="${entry}" checked="${descriptor.getCleanBeforeBuild()}" />
-												</j:otherwise>
-											</j:choose>
-										</j:otherwise>
-									</j:choose>
-									</xb:singleEntry>
-									
-									<xb:singleEntry title="${%archive app}:" help="help-archiveapp.html" titleStyle="vertical-align:middle;">
-									<j:set var="entry" value="${entry_preamble_config + archive_app_arg}" />
-									<j:choose>
-										<j:when test="${descriptor.getArchiveAppGlobal()}">
-											<input type="checkbox" name="${entry}" checked="${descriptor.getArchiveApp() ? 'true' : null}" disabled="disabled" />
-										</j:when>
-										<j:otherwise>
-											<j:choose>
-												<j:when test="${subMenuUsed}">
-													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
-												</j:when>
-												<j:otherwise>
-													<f:checkbox name="${entry}" checked="${descriptor.getArchiveApp()}" />
-												</j:otherwise>
-											</j:choose>
-										</j:otherwise>
-									</j:choose>
-									</xb:singleEntry>
-									
-									<xb:singleEntry title="${%create ipa}:" help="help-createipa.html" titleStyle="vertical-align:middle;">
-									<j:set var="entry" value="${entry_preamble_config + create_ipa_arg}" />
-									<j:choose>
-										<j:when test="${descriptor.getCreateIpaGlobal()}">
-											<input type="checkbox" name="${entry}" checked="${descriptor.getCreateIpa() ? 'true' : null}" disabled="disabled" />
-										</j:when>
-										<j:otherwise>
-											<j:choose>
-												<j:when test="${subMenuUsed}">
-													<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
-												</j:when>
-												<j:otherwise>
-													<f:checkbox name="${entry}" checked="${descriptor.getCreateIpa()}" />
-												</j:otherwise>
-											</j:choose>
-										</j:otherwise>
-									</j:choose>
-									</xb:singleEntry>
-									
-								</table>
+									<xb:configProperties />
 								</td>
 							</f:optionalBlock>
 						</j:forEach>
