@@ -83,4 +83,13 @@ public class OCUnitTestSuite implements Serializable {
 		
 		return testCaseFailuresCount;
 	}
+	
+	public double getTestSuiteDuration() {
+		double duration = 0.0;
+		
+		for(OCUnitTestCase testCase: this.testCases)
+			duration += testCase.getTestCaseDuration();
+		
+		return duration;
+	}
 }

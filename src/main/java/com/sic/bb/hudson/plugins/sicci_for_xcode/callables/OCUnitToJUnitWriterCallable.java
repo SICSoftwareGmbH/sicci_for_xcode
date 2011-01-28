@@ -64,8 +64,6 @@ public class OCUnitToJUnitWriterCallable implements FileCallable<Boolean>{
 	        for(OCUnitTestSuite testSuite: this.testSuites) {
 	        	Document document = documentBuilder.newDocument();
 	        	
-	        	double executionTime = 0.0;
-	        	
 	        	Element testSuiteElement = document.createElement("testsuite");
 	        	testSuiteElement.setAttribute("errors","0");
 	        	testSuiteElement.setAttribute("failures", String.valueOf(testSuite.getTestCasesFailuresCount()));
@@ -95,10 +93,9 @@ public class OCUnitToJUnitWriterCallable implements FileCallable<Boolean>{
 	        		}
 	        		
 	        		testSuiteElement.appendChild(testCaseElement);
-	        		executionTime += testCase.getTestCaseDuration();
 	        	}
 	        	
-	        	testSuiteElement.setAttribute("time", String.valueOf(executionTime));
+	        	testSuiteElement.setAttribute("time", String.valueOf(testSuite.getTestSuiteDuration()));
 	        	
 	        	document.appendChild(testSuiteElement);
 	        	
