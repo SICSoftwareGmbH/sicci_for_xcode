@@ -18,7 +18,7 @@
  * 
  -->
 
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/sicci_for_xcode/XcodeBuilder/lib">
+<j:jelly xmlns:u="jelly:util" xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/sicci_for_xcode/XcodeBuilder/lib">
 	
 	<j:set var="builder" value="${attrs.builder}" />
 	<j:set var="descriptor" value="${attrs.descriptor}" />
@@ -31,7 +31,7 @@
 	<div id="targets">
 	<j:choose>
 		<j:when test="${targets.size() == 0}">
-			<span style="margin:15px 0px 10px 40px;">${%no target found}</span>
+			<p style="padding:0 0 0 14px;">${%no target found}</p>
 		</j:when>
 		
 		<j:otherwise>
@@ -41,38 +41,46 @@
 			<j:set var="archive_app_arg" value="${descriptor.getArchiveAppArg()}" />
 			<j:set var="create_ipa_arg" value="${descriptor.getCreateIpaArg()}" />
 		
-			<table style="width:100%; padding:0 0 0 20px;">
+			<table style="width:100%; padding:5px 0 0 5px;">
 			<j:forEach items="${targets}" var="target">
+				<j:set var="targetWoSpaces" value="${descriptor.replaceSpaces(target)}" />
 				<j:set var="entry_preamble_target" value="${target + field_delimiter}" />
 				
 				<f:optionalBlock title="${target}" checked="${builder.subMenuUsed(entry_preamble_target)}">
 					<td>
-					<table style="width:100%; padding:0 0 0 23px">
+					<table style="width:100%; padding:0 0 0 10px">
 						<tr>
 							<td>
-								<table style="width:100%; padding:0 0 0 13px;">
+								<table style="width:100%;">
 									<xb:singleEntry title="${%unit test target}:" help="help-unittesttarget.html" titleStyle="vertical-align:middle;">
 										<j:set var="entry" value="${entry_preamble_target + unit_test_target_arg}" />
-										<f:checkbox name="${entry}" checked="${builder.getBooleanPreference(entry)}" />
+										<j:set scope="parent" var="isUnitTestTarget" value="${builder.getBooleanPreference(entry)}" />
+										<f:checkbox name="${entry}" checked="${isUnitTestTarget}" onclick="toggleVisibility('${targetWoSpaces}')" />
 									</xb:singleEntry>
 								</table>
 							</td>
 						</tr>
 						
 						<tr>
-							<td style="padding:0 0 5px 0;"><span style="font-weight:bold;">${%build configurations}:</span></td>
+							<td style="padding:0 0 5px 12px;"><span style="font-weight:bold;">${%build configurations}:</span></td>
 						</tr>
 						
-						<j:forEach items="${builder.getBuildConfigurations(projectDir)}" var="configuration">
-							<j:set var="entry_preamble_config" value="${entry_preamble_target + configuration + field_delimiter}" />
-							<j:set var="subMenuUsed" value="${builder.subMenuUsed(entry_preamble_config)}" />
-							
-							<f:optionalBlock title="${configuration}" checked="${subMenuUsed}">
-								<td>
-									<xb:configProperties />
-								</td>
-							</f:optionalBlock>
-						</j:forEach>
+						<tr>
+							<td style="padding:0 0 0 17px;">
+								<table style="width:100%">
+								<j:forEach items="${builder.getBuildConfigurations(projectDir)}" var="configuration">
+									<j:set var="entry_preamble_config" value="${entry_preamble_target + configuration + field_delimiter}" />
+									<j:set var="subMenuUsed" value="${builder.subMenuUsed(entry_preamble_config)}" />
+									
+									<f:optionalBlock title="${configuration}" checked="${subMenuUsed}">
+										<td style="padding:5px 0 0 14px;">
+											<xb:configProperties />
+										</td>
+									</f:optionalBlock>
+									</j:forEach>
+								</table>
+							</td>
+						</tr>
 					</table>
 					</td>
 				</f:optionalBlock>

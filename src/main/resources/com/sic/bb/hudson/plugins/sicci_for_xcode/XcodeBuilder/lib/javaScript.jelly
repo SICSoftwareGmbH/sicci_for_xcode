@@ -34,9 +34,9 @@
 	                p.removeChild(hist);
 	                
 	                var style_attr = document.createAttribute('style');
-	                style_attr.nodeValue = 'margin:15px 0px 10px 40px;';
+	                style_attr.nodeValue = 'margin:10px 0px 20px 10px;';
 	                
-	                var span_loading = document.createElement('span');
+	                var span_loading = document.createElement('p');
 	                span_loading.setAttributeNode(style_attr);
 	                span_loading.appendChild(document.createTextNode('loading...'));
 	                
@@ -67,6 +67,10 @@
 	                Behaviour.applySubtree(node);
 	            }
 	        });
+	    };
+	    
+	    function toggleVisibility(class) {
+	    	$$('.' + class).invoke('toggle');
 	    };
 	</script>
 </j:jelly>
