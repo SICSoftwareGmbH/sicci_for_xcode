@@ -130,13 +130,13 @@
 			
 			<j:if test="${!noProjectDirs}">
 				<tr>
-					<td style="padding:10px 0 0 0;"><st:nbsp /></td>
-					<td style="padding:10px 0 0 14px;"><span style="font-weight:bold;">${%build targets}:</span></td>
+					<td style="padding:5px 0 0 0;"><st:nbsp /></td>
+					<td colspan="2" style="padding:5px 0 0 14px;"><span style="font-weight:bold;">${%build targets}:</span></td>
 				</tr>
 				
 				<tr>
-					<td style="padding:10px 0 0 0;"><st:nbsp /></td>
-					<td colspan="2" style="padding:10px 0 0 0;">
+					<td><st:nbsp /></td>
+					<td colspan="2" style="padding:0 0 0 14px;">
 						<xb:targetsList descriptor="${descriptor}" builder="${builder}" projectDir="${workspace}" />
 					</td>
 				</tr>
@@ -144,6 +144,6 @@
 		</j:otherwise>
 	</j:choose>
 	
-	<xb:refreshTargets />
+	<xb:javaScript />
 	
 </j:jelly>

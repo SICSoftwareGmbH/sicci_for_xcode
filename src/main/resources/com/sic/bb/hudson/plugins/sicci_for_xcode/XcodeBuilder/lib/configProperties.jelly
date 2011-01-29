@@ -20,7 +20,7 @@
 
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/hudson/plugins/sicci_for_xcode/XcodeBuilder/lib">
 	
-	<table style="width:100%; padding:5px 0 0 13px;">
+	<table style="width:100%;">
 	
 		<xb:singleEntry title="${%clean before build}:" help="help-cleanbeforebuild.html" titleStyle="vertical-align:middle;">
 		<j:set var="entry" value="${entry_preamble_config + clean_before_build_arg}" />
@@ -41,6 +41,14 @@
 		</j:choose>
 		</xb:singleEntry>
 		
+	</table>
+	
+	<j:if test="${isUnitTestTarget}">
+		<j:set var="unit_test_style" value="display:none;" />
+	</j:if>
+	
+	<table class="${targetWoSpaces}" style="${unit_test_style} width:100%;">
+	
 		<xb:singleEntry title="${%archive app}:" help="help-archiveapp.html" titleStyle="vertical-align:middle;">
 		<j:set var="entry" value="${entry_preamble_config + archive_app_arg}" />
 		<j:choose>

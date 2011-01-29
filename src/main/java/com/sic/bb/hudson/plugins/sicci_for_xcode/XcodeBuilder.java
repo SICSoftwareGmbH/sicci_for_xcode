@@ -715,5 +715,9 @@ public class XcodeBuilder extends Builder {
         public static String getArchiveAppArg() {
         	return ARCHIVE_APP_ARG;
         }
+        
+        public static String replaceSpaces(String withSpaces) {
+        	return withSpaces.replaceAll("\\s", "_");
+        }
     }
 }
