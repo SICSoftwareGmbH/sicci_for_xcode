@@ -7,13 +7,11 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>com.sic.bb.jenkins.plugins</groupId>
   <artifactId>sicci_for_xcode</artifactId>
   <name>SICCI for Xcode Plugin</name>
-  <version>0.0.7</version>
-  <description>This plugin integrates support for Xcode projects
-</description>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/SICCI+for+Xcode+Plugin</url>
+  <version>0.0.7-SNAPSHOT</version>
+  <description>This plugin integrates support for Xcode projects</description>
+  <url>http://wiki.hudson-ci.org/display/HUDSON/SICCI+for+Xcode+Plugin</url>
   <packaging>hpi</packaging>
   
   <developers>
@@ -23,6 +21,19 @@
       <email>benedikt@biallowons.de</email>
     </developer>
   </developers>
+  
+  <distributionManagement>
+    <repository>
+      <id>java.net-m2-repository</id>
+      <url>http://maven.hudson-labs.org:8081/content/repositories/releases/</url>
+    </repository>
+  </distributionManagement>
+  
+  <scm>
+    <connection>scm:git:git://github.com/hudson/sicci-for-xcode-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:hudson/sicci-for-xcode-plugin.git</developerConnection>
+    <url>http://github.com/hudson/sicci-for-xcode-plugin</url>
+  </scm>
   
   <repositories>
     <repository>
