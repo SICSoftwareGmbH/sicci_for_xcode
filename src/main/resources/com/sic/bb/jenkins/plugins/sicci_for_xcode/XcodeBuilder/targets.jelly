@@ -1,5 +1,5 @@
 <!--
- * SICCI for Xcode - Hudson Plugin for Xcode projects
+ * SICCI for Xcode - Jenkins Plugin for Xcode projects
  * 
  * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
  *
@@ -18,6 +18,15 @@
  * 
  -->
 
-<div>
-	This plugin integrates support for Xcode projects
-</div>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form" xmlns:xb="com/sic/bb/jenkins/plugins/sicci_for_xcode/XcodeBuilder/lib">	
+	
+	<st:contentType value="text/html; charset=UTF-8" />
+	
+	<j:new var="h" className="hudson.Functions" />
+	<j:set var="rootURL" value="${request.contextPath}" />
+	<j:set var="resURL"  value="${rootURL}${h.resourcePath}" />
+	<j:set var="imagesURL" value="${rootURL}${h.resourcePath}/images" />
+	
+	<xb:targetsList descriptor="${it}" builder="${it}" projectDir="${it.getProjectDir()}" />
+
+</j:jelly>

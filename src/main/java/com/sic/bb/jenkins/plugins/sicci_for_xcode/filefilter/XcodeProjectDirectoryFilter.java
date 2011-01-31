@@ -1,5 +1,5 @@
-<!--
- * SICCI for Xcode - Hudson Plugin for Xcode projects
+/*
+ * SICCI for Xcode - Jenkins Plugin for Xcode projects
  * 
  * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
  *
@@ -16,8 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- -->
+ */
 
-<div>
-	This plugin integrates support for Xcode projects
-</div>
+package com.sic.bb.jenkins.plugins.sicci_for_xcode.filefilter;
+
+import java.io.File;
+
+public final class XcodeProjectDirectoryFilter extends DirectoryFilter {
+	private static final long serialVersionUID = 1L;
+	public static final String FILE_ENDING = ".xcodeproj";
+
+	public boolean accept(File dir, String filename) {
+		return super.accept(dir, filename) && filename.endsWith(FILE_ENDING);
+	}
+}

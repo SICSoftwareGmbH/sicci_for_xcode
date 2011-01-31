@@ -1,0 +1,48 @@
+<!--
+ * SICCI for Xcode - Jenkins Plugin for Xcode projects
+ * 
+ * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ -->
+
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">	
+	<j:set var="entry" value="${attrs}" />
+	<tr>
+		<td class="setting-leftspace"><st:nbsp /></td>
+		<td class="setting-name" style="${attrs.style}${attrs.titleStyle}">${attrs.title}</td>
+		<td class="setting-main" style="${attrs.style}${attrs.mainStyle}">
+			<d:invokeBody />
+		</td>
+		<td style="${attrs.style}${attrs.helpStyle}">
+			<j:if test="${attrs.help != null}">
+				<a href="#" class="help-button" helpURL="${rootURL}/plugin/sicci_for_xcode/${attrs.help}"><img src="${imagesURL}/16x16/help.gif" alt="Help for feature: ${title}" /></a>
+			</j:if>
+		</td>
+	</tr>
+	<tr class="validation-error-area">
+		<td style="padding:0px;" colspan="2" />
+		<td style="padding:0 0 0 5px;" />
+	</tr>
+  	<j:if test="${attrs.help != null}">
+	  	<tr class="help-area">
+	    	<td/>
+	    	<td colspan="2" style="${attrs.helpAreaStyle}">
+	     		<div class="help">${%Loading...}</div>
+	    	</td>
+	    	<td/>
+	  	</tr>
+	</j:if>
+</j:jelly>

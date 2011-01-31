@@ -1,6 +1,6 @@
 work
 target
-.settings
+.settings/*
 .classpath
 .project
 .DS_Store

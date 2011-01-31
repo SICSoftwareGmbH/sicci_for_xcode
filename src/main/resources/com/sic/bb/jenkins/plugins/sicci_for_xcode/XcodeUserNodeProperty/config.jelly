@@ -1,5 +1,5 @@
 <!--
- * SICCI for Xcode - Hudson Plugin for Xcode projects
+ * SICCI for Xcode - Jenkins Plugin for Xcode projects
  * 
  * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
  *
@@ -17,7 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
  -->
-
-<div>
-	This plugin integrates support for Xcode projects
-</div>
+ 
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:f="/lib/form">
+	<td colspan="2" />
+	<td>
+	<table width="100%">
+		<f:entry title="${%username}" help="${rootURL}/plugin/sicci_for_xcode/node_username/help-username.html">
+	    	<f:textbox field="username" name="sicci.username" />
+		</f:entry>
+		<f:entry title="${%password}" help="${rootURL}/plugin/sicci_for_xcode/node_password/help-password.html">
+	    	<f:password field="password" name="sicci.password" />
+		</f:entry>
+	</table>
+	</td>
+</j:jelly>

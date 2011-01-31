@@ -1,5 +1,5 @@
-<!--
- * SICCI for Xcode - Hudson Plugin for Xcode projects
+/*
+ * SICCI for Xcode - Jenkins Plugin for Xcode projects
  * 
  * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
  *
@@ -16,8 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- -->
+ */
 
-<div>
-	This plugin integrates support for Xcode projects
-</div>
+package com.sic.bb.jenkins.plugins.sicci_for_xcode.ocunit;
+
+import java.io.Serializable;
+
+public enum OCUnitTestCaseResult implements Serializable {
+	PASSED, FAILED;
+}

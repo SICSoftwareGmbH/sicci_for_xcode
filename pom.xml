@@ -7,12 +7,13 @@
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>com.sic.bb.hudson.plugins</groupId>
+  <groupId>com.sic.bb.jenkins.plugins</groupId>
   <artifactId>sicci_for_xcode</artifactId>
   <name>SICCI for Xcode Plugin</name>
-  <version>0.0.6</version>
-  <description>Plugin for Xcode projects</description>
-  <url>http://wiki.hudson-ci.org/display/HUDSON/SICCI+for+Xcode+Plugin</url>
+  <version>0.0.7</version>
+  <description>This plugin integrates support for Xcode projects
+</description>
+  <url>http://wiki.jenkins-ci.org/display/JENKINS/SICCI+for+Xcode+Plugin</url>
   <packaging>hpi</packaging>
   
   <developers>

@@ -1,5 +1,5 @@
-<!--
- * SICCI for Xcode - Hudson Plugin for Xcode projects
+/*
+ * SICCI for Xcode - Jenkins Plugin for Xcode projects
  * 
  * Copyright (C) 2011 Benedikt Biallowons, SIC! Software GmbH
  *
@@ -16,8 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * 
- -->
+ */
 
-<div>
-	This plugin integrates support for Xcode projects
-</div>
+package com.sic.bb.jenkins.plugins.sicci_for_xcode.filefilter;
+
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.Serializable;
+
+public class XmlFileFilter implements FilenameFilter, Serializable {
+	private static final long serialVersionUID = 1L;
+	public static final String FILE_ENDING = ".xml";
+	
+	public boolean accept(File dir, String filename) {
+		return new File(dir, filename).isFile() && filename.endsWith(FILE_ENDING);
+	}
+}

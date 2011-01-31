@@ -1,0 +1,19 @@
+<div>
+  <p>
+		Please insert your machine's username, so Jenkins is able to to find the matching login keychain.<br/>
+		<br/>
+		Why does this plugin need access to my login keychain?<br/>
+		<br/>
+		Xcode expects to find code signing identities (private key + certificate) in one of your keychains. The login
+		keychain is your default keychain for storing this kind of information and if you've imported a developer identity
+		some time before, it's probably stored in this keychain.<br/><br/>
+		If you want to build a iOS project for your device, you HAVE to use code signing, so you HAVE to insert your
+		credentials here.<br/>
+		<br/>
+		Future versions:<br/>
+		<br/>
+		It's planned, that this plugin will give you the possibility to manage the whole code singing stuff (importing
+		developer identities, mobile provisioning profiles etc.) from Jenkins' webinterface, so you get rid of some
+		really time consuming and bothersome tasks (think of a distributed environment).
+  </p>
+</div>
