@@ -9,7 +9,7 @@
 
   <artifactId>sicci_for_xcode</artifactId>
   <name>SICCI for Xcode Plugin</name>
-  <version>0.0.7-SNAPSHOT</version>
+  <version>0.0.7</version>
   <description>This plugin integrates support for Xcode projects</description>
   <url>http://wiki.hudson-ci.org/display/HUDSON/SICCI+for+Xcode+Plugin</url>
   <packaging>hpi</packaging>
