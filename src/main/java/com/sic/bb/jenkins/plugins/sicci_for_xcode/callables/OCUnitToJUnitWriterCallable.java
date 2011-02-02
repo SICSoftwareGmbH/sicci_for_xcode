@@ -20,6 +20,9 @@
 
 package com.sic.bb.jenkins.plugins.sicci_for_xcode.callables;
 
+import hudson.FilePath.FileCallable;
+import hudson.remoting.VirtualChannel;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -41,9 +44,6 @@ import com.sic.bb.jenkins.plugins.sicci_for_xcode.ocunit.OCUnitTestCase;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.ocunit.OCUnitTestCaseError;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.ocunit.OCUnitTestCaseResult;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.ocunit.OCUnitTestSuite;
-
-import hudson.FilePath.FileCallable;
-import hudson.remoting.VirtualChannel;
 
 public class OCUnitToJUnitWriterCallable implements FileCallable<Boolean>{
 	private static final long serialVersionUID = 1L;

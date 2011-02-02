@@ -20,8 +20,8 @@
 
 package com.sic.bb.jenkins.plugins.sicci_for_xcode.util;
 
-import hudson.os.PosixAPI;
 import hudson.Util;
+import hudson.os.PosixAPI;
 
 import java.io.File;
 import java.io.FileInputStream;

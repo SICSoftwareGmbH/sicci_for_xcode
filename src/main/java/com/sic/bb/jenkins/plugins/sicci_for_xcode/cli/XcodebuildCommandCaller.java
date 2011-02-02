@@ -22,7 +22,6 @@ package com.sic.bb.jenkins.plugins.sicci_for_xcode.cli;
 
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.RETURN_OK;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.TEST_FOLDER_NAME;
-
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -34,7 +33,6 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Vector;
 
-import com.sic.bb.jenkins.plugins.sicci_for_xcode.cli.Messages;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.callables.OCUnitToJUnitWriterCallable;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.io.ParsedOutputStream;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.ocunit.OCUnitTestSuite;

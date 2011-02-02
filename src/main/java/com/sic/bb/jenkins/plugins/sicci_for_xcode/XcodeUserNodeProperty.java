@@ -20,11 +20,6 @@
 
 package com.sic.bb.jenkins.plugins.sicci_for_xcode;
 
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import com.sic.bb.jenkins.plugins.sicci_for_xcode.Messages;
-
 import hudson.Extension;
 import hudson.model.Computer;
 import hudson.model.Hudson;
@@ -32,6 +27,9 @@ import hudson.model.Node;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.NodePropertyDescriptor;
 import hudson.util.Secret;
+
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class XcodeUserNodeProperty extends NodeProperty<Node> {
 	private Secret username;

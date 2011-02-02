@@ -20,13 +20,13 @@
 
 package com.sic.bb.jenkins.plugins.sicci_for_xcode.io;
 
+import hudson.console.LineTransformationOutputStream;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Vector;
 
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.ocunit.OCUnitTestSuite;
-
-import hudson.console.LineTransformationOutputStream;
 
 public class ParsedOutputStream extends LineTransformationOutputStream {
 	private final OCUnitOutputParser ocUnitParser;

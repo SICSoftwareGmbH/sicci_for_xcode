@@ -21,16 +21,14 @@
 package com.sic.bb.jenkins.plugins.sicci_for_xcode.cli;
 
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.RETURN_OK;
-
-import com.sic.bb.jenkins.plugins.sicci_for_xcode.cli.Messages;
-import com.sic.bb.jenkins.plugins.sicci_for_xcode.io.MaskedOutputStream;
-
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import hudson.util.StreamTaskListener;
+
+import com.sic.bb.jenkins.plugins.sicci_for_xcode.io.MaskedOutputStream;
 
 public class SecurityCommandCaller {
 	public static final String DEFAULT_KEYCHAIN = "/Users/<USERNAME>/Library/Keychains/login.keychain";
