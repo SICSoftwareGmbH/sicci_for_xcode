@@ -20,6 +20,7 @@
 
 package com.sic.bb.jenkins.plugins.sicci_for_xcode;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.Messages;
@@ -43,10 +44,16 @@ public class XcodeUserNodeProperty extends NodeProperty<Node> {
 	}
 	
 	public String getUsername() {
+		if(StringUtils.isBlank(Secret.toString(this.username)))
+			return null;
+		
 		return Secret.toString(this.username);
 	}
 	
 	public String getPassword() {
+		if(StringUtils.isBlank(Secret.toString(this.password)))
+			return null;
+		
 		return Secret.toString(this.password);
 	}
 	

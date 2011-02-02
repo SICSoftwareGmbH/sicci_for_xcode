@@ -32,7 +32,6 @@ import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.MAX_XCOD
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.MIN_XCODE_PROJECT_SEARCH_DEPTH;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.TRUE;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.UNIT_TEST_TARGET_ARG;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -68,7 +67,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
-import com.sic.bb.jenkins.plugins.sicci_for_xcode.Messages;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.callables.AppArchiverCallable;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.callables.IpaPackagerCallable;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.callables.XcodeProjectSearchCallable;
@@ -229,7 +227,7 @@ public class XcodeBuilder extends Builder {
 				if(XcodePlatform.fromString(getXcodePlatform()) == XcodePlatform.IOS)
 					return false;
 			}
-		} else if(property == null) {
+		} else {
 			listener.fatalError(Messages.XcodeBuilder_prebuild_keychainCredentialsNotSet() + "\n");
 			
 			if(XcodePlatform.fromString(getXcodePlatform()) == XcodePlatform.IOS)
