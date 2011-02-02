@@ -11,7 +11,7 @@
   <name>SICCI for Xcode Plugin</name>
   <version>0.0.8-SNAPSHOT</version>
   <description>This plugin integrates support for Xcode projects</description>
-  <url>http://wiki.hudson-ci.org/display/HUDSON/SICCI+for+Xcode+Plugin</url>
+  <url>http://wiki.jenkins-ci.org/display/JENKINS/SICCI+for+Xcode+Plugin</url>
   <packaging>hpi</packaging>
   
   <developers>
@@ -30,9 +30,9 @@
   </distributionManagement>
   
   <scm>
-    <connection>scm:git:git://github.com/hudson/sicci-for-xcode-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:hudson/sicci-for-xcode-plugin.git</developerConnection>
-    <url>http://github.com/hudson/sicci-for-xcode-plugin</url>
+    <connection>scm:git:git://github.com/jenkinsci/sicci-for-xcode-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:jenkinsci/sicci-for-xcode-plugin.git</developerConnection>
+    <url>http://github.com/jenkinsci/sicci-for-xcode-plugin</url>
   </scm>
   
   <repositories>
