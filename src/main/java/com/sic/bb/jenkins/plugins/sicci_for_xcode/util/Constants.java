@@ -37,6 +37,14 @@ public final class Constants {
 	
 	public static final String FIELD_DELIMITER = "|-|";
 	
+	public static final String PROJECT_DIR_ARG = "ProjectDir";
+	public static final String XCODE_PLATFORM_ARG = "XcodePlatform";
+	public static final String FILENAME_TEMPLATE_ARG = "FilenameTemplate";
+	public static final String XCODE_PROJECT_SEARCH_DEPTH_ARG = "XcodeProjectSearchDepth";
+	public static final String PROJECT_DIRS_ARG = "ProjectDirs";
+	public static final String BUILD_TARGETS_ARG = "BuildTargets";
+	public static final String BUILD_CONFIGURATIONS_ARG = "BuildConfigurations";
+	
 	public static final String BUILD_ARG = "build";
 	public static final String UNIT_TEST_TARGET_ARG = "unit_test";
 	public static final String CLEAN_BEFORE_BUILD_ARG = "clean_before_build";

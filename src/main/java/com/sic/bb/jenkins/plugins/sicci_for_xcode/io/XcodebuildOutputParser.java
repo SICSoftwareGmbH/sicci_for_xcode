@@ -37,37 +37,32 @@ public class XcodebuildOutputParser {
 	private static final String BUILD_CONFIGURATION_PARSE_STRING = "Build Configurations";
 	private static final String TARGET_PARSE_STRING = "Targets:";
     
-	public static String[] getBuildConfigurations(FilePath workspace) {
-    	return parseXcodebuildList(workspace, BUILD_CONFIGURATION_PARSE_STRING);
-    }
-    
     public static String[] getBuildTargets(FilePath workspace) {
-    	return parseXcodebuildList(workspace, TARGET_PARSE_STRING);
+    	return parseXcodebuildList(workspace, TARGET_PARSE_STRING, true);
     }
     
-    public static String[] getAvailableSdks(FilePath workspace) {
-		ArrayList<String> sdks = new ArrayList<String>();
-		
-		String sdksString = XcodebuildCommandCaller.getInstance().getOutput(workspace,"-list");
-		
-		if(StringUtils.isBlank(sdksString))
-			return new String[0];
-		
-		for(String sdk: sdksString.split("\n")) {
-			if(!sdk.contains("-sdk"))
-				continue;
-			
-			sdks.add(availableSdksPattern.matcher(sdk).replaceAll("$1"));
-		}
-    
-		return (String[]) sdks.toArray(new String[sdks.size()]);
+    public static String[] getBuildTargetsNoCache(FilePath workspace) {
+    	return parseXcodebuildList(workspace, TARGET_PARSE_STRING, false);
+    }
+	
+	public static String[] getBuildConfigurations(FilePath workspace) {
+    	return parseXcodebuildList(workspace, BUILD_CONFIGURATION_PARSE_STRING, true);
+    }
+	
+	public static String[] getBuildConfigurationsNoCache(FilePath workspace) {
+    	return parseXcodebuildList(workspace, BUILD_CONFIGURATION_PARSE_STRING, false);
     }
     
-    private static String[] parseXcodebuildList(FilePath workspace, String arg) {
+    private static String[] parseXcodebuildList(FilePath workspace, String arg, boolean useCache) {
 		ArrayList<String> items = new ArrayList<String>();
 		boolean found = false;
 		
-		String itemsString = XcodebuildCommandCaller.getInstance().getOutput(workspace,"-list");
+		String itemsString;
+		
+		if(useCache)
+			itemsString = XcodebuildCommandCaller.getInstance().getOutput(workspace,"-list");
+		else
+			itemsString = XcodebuildCommandCaller.getInstance().getOutputNoCache(workspace,"-list");
 		
 		if(StringUtils.isBlank(itemsString))
 			return new String[0];
@@ -86,5 +81,23 @@ public class XcodebuildOutputParser {
 		}
     
 		return (String[]) items.toArray(new String[items.size()]);
+    }
+    
+    public static String[] getAvailableSdks(FilePath workspace) {
+		ArrayList<String> sdks = new ArrayList<String>();
+		
+		String sdksString = XcodebuildCommandCaller.getInstance().getOutput(workspace,"-list");
+		
+		if(StringUtils.isBlank(sdksString))
+			return new String[0];
+		
+		for(String sdk: sdksString.split("\n")) {
+			if(!sdk.contains("-sdk"))
+				continue;
+			
+			sdks.add(availableSdksPattern.matcher(sdk).replaceAll("$1"));
+		}
+    
+		return (String[]) sdks.toArray(new String[sdks.size()]);
     }
 }

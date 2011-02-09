@@ -20,18 +20,26 @@
 
 package com.sic.bb.jenkins.plugins.sicci_for_xcode;
 
+
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.ARCHIVE_APP_ARG;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.BUILD_ARG;
+import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.BUILD_CONFIGURATIONS_ARG;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.BUILD_FOLDER_NAME;
+import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.BUILD_TARGETS_ARG;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.CLEAN_BEFORE_BUILD_ARG;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.CREATE_IPA_ARG;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.DEFAULT_FILENAME_TEMPLATE;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.DEFAULT_XCODE_PROJECT_SEARCH_DEPTH;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.FIELD_DELIMITER;
+import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.FILENAME_TEMPLATE_ARG;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.MAX_XCODE_PROJECT_SEARCH_DEPTH;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.MIN_XCODE_PROJECT_SEARCH_DEPTH;
+import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.PROJECT_DIR_ARG;
+import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.PROJECT_DIRS_ARG;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.TRUE;
 import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.UNIT_TEST_TARGET_ARG;
+import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.XCODE_PLATFORM_ARG;
+import static com.sic.bb.jenkins.plugins.sicci_for_xcode.util.Constants.XCODE_PROJECT_SEARCH_DEPTH_ARG;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -77,62 +85,115 @@ import com.sic.bb.jenkins.plugins.sicci_for_xcode.util.PluginUtils;
 import com.sic.bb.jenkins.plugins.sicci_for_xcode.util.XcodePlatform;
 
 public class XcodeBuilder extends Builder {
-    private final Map<String,String> data;
+	private Map<String,String> data;
+    private Map<String,List<String>> dataList;
     
     private transient FilePath currentProjectDirectory;
     private transient String currentUsername;
     private transient String currentPassword;
     private transient boolean currentBuildIsUnitTest; 
 
-    public XcodeBuilder(Map<String,String> data) {
+    public XcodeBuilder(Map<String,String> data, Map<String,List<String>> dataList) {
     	this.data = data;
+    	this.dataList = dataList;
     }
     
     public String getProjectDir() {
-    	if(!this.data.containsKey("ProjectDir"))
+    	if(this.data == null || !this.data.containsKey(PROJECT_DIR_ARG))
     		return null;
     	
-		// TODO ProjectDir could contain slashes (right dir separator?)
-    	return this.data.get("ProjectDir");
+		return this.data.get(PROJECT_DIR_ARG);
     }
     
     public String getXcodePlatform() {
-    	if(!this.data.containsKey("XcodePlatform"))
+    	if(this.data == null || !this.data.containsKey(XCODE_PLATFORM_ARG))
     		return null;
     	
-    	return this.data.get("XcodePlatform");
+    	return this.data.get(XCODE_PLATFORM_ARG);
     }
     
     public String getFilenameTemplate() {
-    	if(!this.data.containsKey("FilenameTemplate"))
+    	if(this.data == null || !this.data.containsKey(FILENAME_TEMPLATE_ARG))
     		return null;
     	
-    	return this.data.get("FilenameTemplate");
+    	String filenameTemplate = this.data.get(FILENAME_TEMPLATE_ARG);
+    	
+    	if(StringUtils.isBlank(filenameTemplate))
+    		return null;
+    	
+    	return filenameTemplate;
     }
     
     public String getXcodeProjectSearchDepth() {
-    	if(!this.data.containsKey("XcodeProjectSearchDepth"))
+    	if(this.data == null || !this.data.containsKey(XCODE_PROJECT_SEARCH_DEPTH_ARG))
     		return null;
     	
-    	return this.data.get("XcodeProjectSearchDepth");
+    	String xcodeProjectSearchDepth = this.data.get(XCODE_PROJECT_SEARCH_DEPTH_ARG);
+    	
+    	if(StringUtils.isBlank(xcodeProjectSearchDepth))
+    		return null;
+    	
+    	return xcodeProjectSearchDepth;
     }
     
     public boolean getBooleanPreference(String key) {
-    	if(!this.data.containsKey(key))
+    	if(this.data == null || !this.data.containsKey(key))
     		return false;
     	
     	return this.data.get(key).equals(TRUE);
     }
     
     public boolean subMenuUsed(String target) {
-    	for(String key: (String[]) this.data.keySet().toArray(new String[this.data.size()]))
+    	if(this.data == null)
+    		return false;
+    	
+    	for(String key: this.data.keySet())
     		if(key.contains(target))
     			return true;
     	
     	return false;
     }
     
+    private void setData(String key, String[] values) {
+    	if(values.length == 0)
+    		return;
+    	
+    	if(values.length == 1) {
+    		if(this.data == null)
+    			this.data = new HashMap<String,String>();
+    				
+    		this.data.put(key,values[0]);
+    		return;
+    	}
+    		
+		List<String> dataList = new ArrayList<String>();	
+		
+		for(String value: values)
+			dataList.add(value);
+		
+		if(this.dataList == null)
+			this.dataList = new HashMap<String,List<String>>();
+		
+		this.dataList.put(key,dataList);
+    }
+    
     public String[] getProjectDirs(FilePath workspace) {
+    	String[] projectDirs;
+    	
+    	if(this.data != null && this.data.containsKey(PROJECT_DIRS_ARG)) {
+    		projectDirs = new String[] { this.data.get(PROJECT_DIRS_ARG) };
+    	} else if(this.dataList != null && this.dataList.containsKey(PROJECT_DIRS_ARG)) {
+    		List<String> projectDirsList = this.dataList.get(PROJECT_DIRS_ARG);	
+    		projectDirs = (String[]) projectDirsList.toArray(new String[projectDirsList.size()]);
+    	} else {
+    		projectDirs = getProjectDirsNoCache(workspace);
+    		setData(PROJECT_DIRS_ARG,projectDirs);
+    	}
+    	
+    	return projectDirs;
+    }
+    
+    private String[] getProjectDirsNoCache(FilePath workspace) {
     	int searchDepth = MIN_XCODE_PROJECT_SEARCH_DEPTH - 1;
     	
     	try {
@@ -147,25 +208,44 @@ public class XcodeBuilder extends Builder {
     	return getDescriptor().getProjectDirs(workspace,searchDepth);
     }
     
-    public String[] getAvailableSdks(FilePath workspace) {
-    	if(getProjectDir() != null)
-    		return XcodebuildOutputParser.getAvailableSdks(workspace.child(getProjectDir()));
+    public String[] getBuildTargets(FilePath workspace) {
+    	String[] buildTargets;
     	
-    	return XcodebuildOutputParser.getAvailableSdks(workspace);
-    }
-
-    public String[] getBuildConfigurations(FilePath workspace) {
-    	if(getProjectDir() != null)
-    		return XcodebuildOutputParser.getBuildConfigurations(workspace.child(getProjectDir()));
-
-    	return XcodebuildOutputParser.getBuildConfigurations(workspace);
+    	if(this.data != null && this.data.containsKey(BUILD_TARGETS_ARG)) {
+    		buildTargets = new String[] { this.data.get(BUILD_TARGETS_ARG) };
+    	} else if(this.dataList != null && this.dataList.containsKey(BUILD_TARGETS_ARG)) {
+    		List<String> buildTargetsList = this.dataList.get(BUILD_TARGETS_ARG);	
+    		buildTargets = (String[]) buildTargetsList.toArray(new String[buildTargetsList.size()]);
+    	} else {
+	    	if(getProjectDir() != null)
+	    		buildTargets = XcodebuildOutputParser.getBuildTargets(workspace.child(getProjectDir()));
+	    	else
+	    		buildTargets = XcodebuildOutputParser.getBuildTargets(workspace);
+	    	
+	    	setData(BUILD_TARGETS_ARG,buildTargets);
+    	}
+    	
+    	return buildTargets;
     }
     
-    public String[] getBuildTargets(FilePath workspace) {
-    	if(getProjectDir() != null)
-    		return XcodebuildOutputParser.getBuildTargets(workspace.child(getProjectDir()));
-
-    	return XcodebuildOutputParser.getBuildTargets(workspace);
+    public String[] getBuildConfigurations(FilePath workspace) {
+    	String[] buildConfigurations;
+    	
+    	if(this.data != null && this.data.containsKey(BUILD_CONFIGURATIONS_ARG)) {
+    		buildConfigurations = new String[] { this.data.get(BUILD_CONFIGURATIONS_ARG) };
+    	} else if(this.dataList != null && this.dataList.containsKey(BUILD_CONFIGURATIONS_ARG)) {
+    		List<String> buildConfigurationsList = this.dataList.get(BUILD_CONFIGURATIONS_ARG);	
+    		buildConfigurations = (String[]) buildConfigurationsList.toArray(new String[buildConfigurationsList.size()]);
+    	} else {
+	    	if(getProjectDir() != null)
+	    		buildConfigurations = XcodebuildOutputParser.getBuildConfigurations(workspace.child(getProjectDir()));
+	    	else
+	    		buildConfigurations = XcodebuildOutputParser.getBuildConfigurations(workspace);
+	    	
+	    	setData(BUILD_CONFIGURATIONS_ARG,buildConfigurations);
+    	}
+    	
+    	return buildConfigurations;
     }
     
     @Override
@@ -177,32 +257,38 @@ public class XcodeBuilder extends Builder {
     public boolean prebuild(AbstractBuild<?,?> build, BuildListener listener) {
 		Computer curComputer = Computer.currentComputer();
 		FilePath workspace = build.getWorkspace();
-		
-		// to empty cache of XcodebuildParser
-        XcodebuildCommandCaller.getInstance().setWorkspaceTemp(workspace.getParent().getName());
         
         listener.getLogger().println("\n" + Messages.XcodeBuilder_prebuild_started() + "\n");
 		
+        // TODO: check if it's OS X
 		if(!curComputer.getNode().createLauncher(listener).isUnix()) {
 			listener.fatalError(Messages.XcodeBuilder_prebuild_unixOnly());
 			return false;
 		}
-		
+
 		if(!XcodebuildCommandCaller.getInstance().check(workspace.getChannel(), listener))
 			return false;
 		
 		if(!SecurityCommandCaller.getInstance().check(workspace.getChannel(), listener))
 			return false;
 		
-		try {			
+		try {
+			String[] projectDirs = getProjectDirsNoCache(workspace);
+			setData(PROJECT_DIRS_ARG,projectDirs);
+			
 	        if(getProjectDir() != null)
 				workspace = workspace.child(getProjectDir());
+	        else if(build.getNumber() == 1 && !projectDirs[0].isEmpty())
+	        	workspace = workspace.child(projectDirs[0]);
 			
 			if(!workspace.exists()) {
 				listener.fatalError(Messages.XcodeBuilder_prebuild_projectDirNotFound() + ": " + workspace);
 				return false;
 			} else
 				this.currentProjectDirectory = workspace;
+			
+			setData(BUILD_TARGETS_ARG,XcodebuildOutputParser.getBuildTargetsNoCache(workspace));
+			setData(BUILD_CONFIGURATIONS_ARG,XcodebuildOutputParser.getBuildConfigurationsNoCache(workspace));
 		} catch(Exception e) {
 			listener.fatalError(Messages.XcodeBuilder_prebuild_projectDirNotFound() + ": " + workspace + "\n");
 			return false;
@@ -402,6 +488,7 @@ public class XcodeBuilder extends Builder {
 		cmds.add(args[1]);
 		
 		if(getBooleanPreference(args[0] + FIELD_DELIMITER + UNIT_TEST_TARGET_ARG)) {
+			// iOS unit test have to be run with iOS Simulator platform
 			if(getXcodePlatform().equals(XcodePlatform.IOS.getXcodePlatformName())) {
 				cmds.add("-sdk");
 				cmds.add(XcodePlatform.IOS_SIMULATOR.getXcodePlatformSdkName());
@@ -444,10 +531,7 @@ public class XcodeBuilder extends Builder {
     }
     
     @Extension
-    public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {    	
-    	private transient Map<String,FilePath> projectWorkspaceMap;
-    	private transient FilePath currentProjectDir;
-    	
+    public static final class XcodeBuilderDescriptor extends BuildStepDescriptor<Builder> {
     	private String filenameTemplate;
         private boolean filenameTemplateGlobal;
         private int xcodeProjectSearchDepth;
@@ -455,6 +539,9 @@ public class XcodeBuilder extends Builder {
         private boolean cleanBeforeBuild, cleanBeforeBuildGlobal;
         private boolean archiveApp, archiveAppGlobal;
         private boolean createIpa, createIpaGlobal;
+        
+    	private transient Map<String,FilePath> projectWorkspaceMap;
+    	private transient FilePath currentProjectDir;
         
         public XcodeBuilderDescriptor() {
         	super(XcodeBuilder.class);
@@ -469,7 +556,12 @@ public class XcodeBuilder extends Builder {
         
         @Override
         public XcodeBuilder newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-        	return new XcodeBuilder(collectFormData(formData));
+        	Map<String,String> stringMap = new HashMap<String,String>();
+        	Map<String,List<String>> stringListMap = new HashMap<String,List<String>>();
+        	
+        	collectFormData(formData,stringMap,stringListMap);
+        	
+        	return new XcodeBuilder(stringMap,stringListMap);
         }
         
         @Override
@@ -486,27 +578,33 @@ public class XcodeBuilder extends Builder {
         }
         
         @SuppressWarnings("unchecked")
-		private Map<String,String> collectFormData(JSONObject formData) {
-        	Map<String,String> formDataMap = new HashMap<String,String>();
+		private void collectFormData(JSONObject formData, Map<String,String> stringMap, Map<String,List<String>> stringListMap) {
 			Iterator<String> it = formData.keys();
-
+			
         	while(it.hasNext()) {
         		String key = it.next();
         		
         		if(formData.get(key).getClass() == JSONArray.class) {
-        			for(int i = 0; i < ((JSONArray) formData.get(key)).size(); i++) 
-        				formDataMap.putAll(collectFormData(((JSONArray) formData.get(key)).getJSONObject(i)));
+        			for(int i = 0; i < formData.getJSONArray(key).size(); i++) {
+        				if(formData.getJSONArray(key).get(i).getClass() == JSONObject.class)
+        					collectFormData(formData.getJSONArray(key).getJSONObject(i), stringMap, stringListMap);
+        				else if(formData.getJSONArray(key).get(i).getClass() == String.class)
+        					collectFormData(new JSONObject().element(key, formData.getJSONArray(key).getString(i)), stringMap, stringListMap);
+        			}	
         		} else if(formData.get(key).getClass() == JSONObject.class) {
-        			formDataMap.putAll(collectFormData((JSONObject) formData.get(key)));
+        			collectFormData(formData.getJSONObject(key), stringMap, stringListMap);
         		} else {
-        			if(!StringUtils.isBlank(formData.getString(key))) {
-        				formDataMap.put(key,StringUtils.strip(formData.getString(key)));
-        				//System.out.println(key + " : " + StringUtils.strip(formData.getString(key)));
-        			}
+    				if(stringListMap.containsKey(key)) {
+    					stringListMap.get(key).add(StringUtils.strip(formData.getString(key)));
+    				} else if(stringMap.containsKey(key)) {
+    					List<String> stringList = new ArrayList<String>();
+    					stringList.add(stringMap.remove(key));
+    					stringList.add(StringUtils.strip(formData.getString(key)));
+    					stringListMap.put(key, stringList);
+    				} else
+    					stringMap.put(key, StringUtils.strip(formData.getString(key)));
         		}
         	}
-        	
-        	return formDataMap;
         }
         
         public void setXcodeProjectSearchDepth(String searchDepth) {        	
@@ -673,7 +771,7 @@ public class XcodeBuilder extends Builder {
         }
         
         @SuppressWarnings("deprecation")
-		public String[] getProjectDirs(FilePath workspace, int searchDepth) { 	
+		public String[] getProjectDirs(FilePath workspace, int searchDepth) {
         	List<String> projectDirs = new ArrayList<String>();
         	
         	if(workspace.isRemote())
@@ -698,16 +796,51 @@ public class XcodeBuilder extends Builder {
         	return projectDirsArray;
         }
         
-        public static String[] getBuildConfigurations(FilePath workspace) {
-        	return XcodebuildOutputParser.getBuildConfigurations(workspace);
-        }
-        
         public static String[] getBuildTargets(FilePath workspace) {
         	return XcodebuildOutputParser.getBuildTargets(workspace);
         }
         
-        public static String[] getAvailableSdks(FilePath workspace) {
-			return XcodebuildOutputParser.getAvailableSdks(workspace);
+        public static String[] getBuildConfigurations(FilePath workspace) {
+        	return XcodebuildOutputParser.getBuildConfigurations(workspace);
+        }
+        
+        public static String replaceSpaces(String withSpaces) {
+        	return withSpaces.replaceAll("\\s", "_");
+        }
+        
+        /* <j:getStatic> doesn't work -> classloader problem */
+        public static String getProjectDirArg() {
+        	return PROJECT_DIR_ARG;
+        }
+        
+        /* <j:getStatic> doesn't work -> classloader problem */
+        public static String getXcodePlatformArg() {
+        	return XCODE_PLATFORM_ARG;
+        }
+        
+        /* <j:getStatic> doesn't work -> classloader problem */
+        public static String getFilenameTemplateArg() {
+        	return FILENAME_TEMPLATE_ARG;
+        }
+        
+        /* <j:getStatic> doesn't work -> classloader problem */
+        public static String getXcodeProjectSearchDepthArg() {
+        	return XCODE_PROJECT_SEARCH_DEPTH_ARG;
+        }
+        
+        /* <j:getStatic> doesn't work -> classloader problem */
+        public static String getProjectDirsArg() {
+        	return PROJECT_DIRS_ARG;
+        }
+        
+        /* <j:getStatic> doesn't work -> classloader problem */
+        public static String getBuildTargetsArg() {
+        	return BUILD_TARGETS_ARG;
+        }
+        
+        /* <j:getStatic> doesn't work -> classloader problem */
+        public static String getBuildConfigurationsArg() {
+        	return BUILD_CONFIGURATIONS_ARG;
         }
         
         /* <j:getStatic> doesn't work -> classloader problem */
@@ -733,10 +866,6 @@ public class XcodeBuilder extends Builder {
         /* <j:getStatic> doesn't work -> classloader problem */
         public static String getArchiveAppArg() {
         	return ARCHIVE_APP_ARG;
-        }
-        
-        public static String replaceSpaces(String withSpaces) {
-        	return withSpaces.replaceAll("\\s", "_");
         }
     }
 }

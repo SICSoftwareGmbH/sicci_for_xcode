@@ -35,11 +35,15 @@
 		</j:when>
 		
 		<j:otherwise>
+			<j:set var="build_targets_arg" value="${descriptor.getBuildTargetsArg()}" />
+			<j:set var="build_configurations_arg" value="${descriptor.getBuildConfigurationsArg()}" />
 			<j:set var="field_delimiter" value="${descriptor.getFieldDelimiter()}" />
 			<j:set var="unit_test_target_arg" value="${descriptor.getUnitTestTargetArg()}" />
 			<j:set var="clean_before_build_arg" value="${descriptor.getCleanBeforeBuildArg()}" />
 			<j:set var="archive_app_arg" value="${descriptor.getArchiveAppArg()}" />
 			<j:set var="create_ipa_arg" value="${descriptor.getCreateIpaArg()}" />
+			
+			<j:set var="configurations" value="${builder.getBuildConfigurations(projectDir)}" />			
 		
 			<table style="width:100%; padding:5px 0 0 5px;">
 			<j:forEach items="${targets}" var="target">
@@ -68,7 +72,7 @@
 						<tr>
 							<td style="padding:0 0 0 17px;">
 								<table style="width:100%">
-								<j:forEach items="${builder.getBuildConfigurations(projectDir)}" var="configuration">
+								<j:forEach items="${configurations}" var="configuration">
 									<j:set var="entry_preamble_config" value="${entry_preamble_target + configuration + field_delimiter}" />
 									<j:set var="subMenuUsed" value="${builder.subMenuUsed(entry_preamble_config)}" />
 									
@@ -77,7 +81,7 @@
 											<xb:configProperties />
 										</td>
 									</f:optionalBlock>
-									</j:forEach>
+								</j:forEach>
 								</table>
 							</td>
 						</tr>
@@ -86,6 +90,15 @@
 				</f:optionalBlock>
 			</j:forEach>
 			</table>
+			
+			<j:forEach items="${targets}" var="target">
+				<input type="hidden" name="${build_targets_arg}" value="${target}" />
+			</j:forEach>
+			
+			<j:forEach items="${configurations}" var="configuration">
+				<input type="hidden" name="${build_configurations_arg}" value="${configuration}" />
+			</j:forEach>
+			
 		</j:otherwise>
 	</j:choose>
 	</div>

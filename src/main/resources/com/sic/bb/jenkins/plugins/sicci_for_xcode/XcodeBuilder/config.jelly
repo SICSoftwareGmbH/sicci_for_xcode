@@ -32,7 +32,7 @@
 			</xb:singleEntry>
 		</j:when>
 		
-		<j:when test="${!workspace.exists()}">
+		<j:when test="${it.getLastBuild() == null and !workspace.exists()}">
 			<xb:singleEntry mainStyle="padding:20px 0 0 10px;">
 				<span style="font-weight:bold;">${%check out scm}</span>
 			</xb:singleEntry>
@@ -42,6 +42,12 @@
 		<!-- everything is ok -->
 		
 		<j:otherwise>
+			<j:set var="project_dir_arg" value="${descriptor.getProjectDirArg()}" />
+			<j:set var="project_dirs_arg" value="${descriptor.getProjectDirsArg()}" />
+			<j:set var="xcode_platform_arg" value="${descriptor.getXcodePlatformArg()}" />
+			<j:set var="filename_template_arg" value="${descriptor.getFilenameTemplateArg()}" />
+			<j:set var="xcode_project_search_depth_arg" value="${descriptor.getXcodeProjectSearchDepthArg()}" />
+			
 			<j:set var="noProjectDirs" value="false" />
 		
 			<xb:singleEntry title="${%project dir}" help="project_dir/help-projectdir.html" titleStyle="vertical-align:middle; padding:15px 0 0 14px;" mainStyle="padding:15px 0 0 5px;" helpStyle="padding:15px 0 0 0" helpAreaStyle="padding:0 0 0 14px;">
@@ -53,7 +59,7 @@
 						<span>${%no project dir found}</span>
 					</j:when>
 					<j:otherwise>
-						<select name="ProjectDir" field="ProjectDir" 
+						<select name="${project_dir_arg}" field="${project_dir_arg}" 
 								onChange="refreshTargets(	'targets',
 															'${rootURL}/builder/XcodeBuilder/ajaxTargets',
 															'${it.getName()}',
@@ -62,7 +68,7 @@
 						<j:set var="loop" value="0" />
 						<j:set var="currentProjectDir" value="${builder.getProjectDir()}" />
 						
-						<j:forEach items="${projectDirs}" var="projectDir">
+						<j:forEach items="${projectDirs}" var="projectDir">							
 							<j:choose>
 								<j:when test="${empty(projectDir) and !empty(currentProjectDir)}">
 									<option value="">${%job root dir}</option>
@@ -87,12 +93,17 @@
 							</j:choose>
 						</j:forEach>
 						</select>
+						
+						<j:forEach items="${projectDirs}" var="projectDir">
+							<input type="hidden" name="${project_dirs_arg}" value="${projectDir}" />
+						</j:forEach>
+						
 					</j:otherwise>
 				</j:choose>
 			</xb:singleEntry>
 			
 			<xb:singleEntry title="${%xcode platform}" help="platform/help-xcodeplatform.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
-				<select name="XcodePlatform" field="XcodePlatform">
+				<select name="${xcode_platform_arg}" field="${xcode_platform_arg}">
 					<j:forEach items="${descriptor.getXcodePlatformNames()}" var="xcodePlatform">
 						<j:choose>
 							<j:when test="${xcodePlatform == builder.getXcodePlatform()}">
@@ -109,10 +120,10 @@
 			<xb:singleEntry title="${%filename template}" help="filename_template/help-filenametemplate.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getFilenameTemplateGlobal()}">
-					<input name="FilenameTemplate" type="text" value="${descriptor.getFilenameTemplate()}" disabled="disabled" style="width:100%;" />
+					<input name="${filename_template_arg}" type="text" value="${descriptor.getFilenameTemplate()}" disabled="disabled" style="width:100%;" />
 				</j:when>
 				<j:otherwise>
-					<f:textbox field="FilenameTemplate" default="${descriptor.getFilenameTemplate()}" />
+					<f:textbox field="${filename_template_arg}" default="${descriptor.getFilenameTemplate()}" />
 				</j:otherwise>
 			</j:choose>
 			</xb:singleEntry>
@@ -120,10 +131,10 @@
 			<xb:singleEntry title="${%xcode project search depth}" help="project_searchdepth/help-xcodeprojectsearchdepth.html" titleStyle="vertical-align:middle; padding:0 0 0 14px;" mainStyle="padding:0 0 0 5px;" helpStyle="padding:0 0 0 0;" helpAreaStyle="padding:0 0 0 14px;">
 			<j:choose>
 				<j:when test="${descriptor.getXcodeProjectSearchDepthGlobal()}">
-					<input name="XcodeProjectSearchDepth" type="text" value="${descriptor.getXcodeProjectSearchDepth()}" disabled="disabled" style="width:100%;" />
+					<input name="${xcode_project_search_depth_arg}" type="text" value="${descriptor.getXcodeProjectSearchDepth()}" disabled="disabled" style="width:100%;" />
 				</j:when>
 				<j:otherwise>
-					<f:textbox field="XcodeProjectSearchDepth" default="${descriptor.getXcodeProjectSearchDepth()}" />
+					<f:textbox field="${xcode_project_search_depth_arg}" default="${descriptor.getXcodeProjectSearchDepth()}" />
 				</j:otherwise>
 			</j:choose>
 			</xb:singleEntry>

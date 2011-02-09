@@ -51,12 +51,6 @@ public class XcodebuildCommandCaller {
 
 		return instance;
 	}
-
-	public void setWorkspaceTemp(String workspace) {
-		if (this.workspaceTemp != null
-				&& this.workspaceTemp.contains(workspace))
-			this.workspaceTemp = null;
-	}
 	
 	public boolean check(VirtualChannel channel, TaskListener listener) {
 		try {
@@ -118,7 +112,11 @@ public class XcodebuildCommandCaller {
 			return this.xcodebuildOutputTemp;
 		else
 			this.workspaceTemp = workspace + arg;
-
+		
+		return getOutputNoCache(workspace, arg);
+	}
+	
+	public String getOutputNoCache(FilePath workspace, String arg) {
 		ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
 		try {
