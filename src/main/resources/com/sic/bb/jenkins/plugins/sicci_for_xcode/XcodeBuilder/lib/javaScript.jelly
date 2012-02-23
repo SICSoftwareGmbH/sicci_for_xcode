@@ -69,8 +69,8 @@
 	        });
 	    };
 	    
-	    function toggleVisibility(class) {
-	    	$$('.' + class).invoke('toggle');
+	    function toggleVisibility(clazz) {
+	    	$$('.' + clazz).invoke('toggle');
 	    };
 	</script>
 </j:jelly>
